@@ -40,7 +40,14 @@ with st.sidebar:
         help="Enter your OpenAI API key to generate scenarios."
     )
     
-    st.caption("AI Model: GPT-4o (Structured Outputs)")
+    # Model Selection
+    model_name = st.text_input(
+        "AI Model", 
+        value="gpt-4o", 
+        help="Change to 'gpt-5.2-preview' (or similar) if you have access. Default is 'gpt-4o'."
+    )
+    
+    st.caption("AI Model: Structured Outputs Enabled")
 
 # --- Main Area ---
 st.title("AI-Powered Wargame Scenario Researcher")
@@ -48,11 +55,23 @@ st.markdown("Generates tactical simulations on a 20x20 grid based on real-world 
 
 # Input Section
 with st.container():
-    context_input = st.text_area(
-        "Scenario Context / Research Topic",
-        placeholder="E.g., A tank platoon ambush in a dense urban environment...",
-        height=100
-    )
+    col_input, col_opt = st.columns([3, 1])
+    
+    with col_input:
+        context_input = st.text_area(
+            "Scenario Context / Research Topic",
+            placeholder="E.g., Recent skirmishes in the Avdiivka sector...",
+            height=100
+        )
+    
+    with col_opt:
+        st.write("") # Spacer
+        st.write("") # Spacer
+        use_search = st.checkbox(
+            "Enable Real-Time Data", 
+            value=False,
+            help="Searches the web for the latest news on the topic before generating the simulation."
+        )
     
     if st.button("Generate Simulation", type="primary"):
         if not api_key:
@@ -63,7 +82,12 @@ with st.container():
             with st.spinner("Analyzing tactics and generating scenario..."):
                 try:
                     # Call AI Handler
-                    scenario = ai_handler.fetch_scenario(api_key, context_input)
+                    scenario = ai_handler.fetch_scenario(
+                        api_key, 
+                        context_input, 
+                        model=model_name, 
+                        use_search=use_search
+                    )
                     
                     # Update State
                     state_manager.set_scenario(scenario)

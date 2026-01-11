@@ -1,8 +1,9 @@
 from pydantic import BaseModel, Field
-from typing import List, Literal
+from typing import List, Literal, Optional
 import openai
 import os
 import json
+from duckduckgo_search import DDGS
 
 # --- Data Models ---
 
@@ -49,18 +50,50 @@ You must output a valid JSON object matching the provided schema.
 Generate a scenario with 5-10 frames based on the user's input context.
 """
 
-def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o") -> WargameScenario:
+def search_realtime_intel(query: str, max_results: int = 5) -> str:
     """
-    Calls OpenAI API to generate a wargame scenario.
+    Searches DuckDuckGo for real-time information on the topic.
+    """
+    try:
+        results = DDGS().text(query, max_results=max_results)
+        if not results:
+            return "No real-time data found."
+        
+        # Compile snippets
+        intel_report = "REAL-TIME INTELLIGENCE REPORT:\n"
+        for i, res in enumerate(results):
+            intel_report += f"{i+1}. {res['title']}: {res['body']}\n"
+        
+        return intel_report
+    except Exception as e:
+        return f"Error fetching real-time data: {str(e)}"
+
+def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o", use_search: bool = False) -> WargameScenario:
+    """
+    Calls OpenAI API to generate a wargame scenario. 
+    Optionally augments context with web search.
     """
     client = openai.Client(api_key=api_key)
+    
+    final_context = context
+
+    if use_search:
+        intel = search_realtime_intel(context)
+        final_context = f"""
+        User Query: {context}
+        
+        LATEST INTELLIGENCE (Real-Time Search):
+        {intel}
+        
+        Based on the intelligence above, reconstruct the tactical situation.
+        """
 
     try:
         completion = client.beta.chat.completions.parse(
             model=model,
             messages=[
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": f"Generate a tactical scenario based on this research topic: {context}"},
+                {"role": "user", "content": f"Generate a tactical scenario based on this research topic: {final_context}"},
             ],
             response_format=WargameScenario,
         )
