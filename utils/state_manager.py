@@ -28,6 +28,11 @@ def set_scenario(scenario_data):
     st.session_state.current_frame_index = 0
     update_metrics(len(scenario_data.frames))
 
+def load_existing_scenario(scenario_data):
+    """Sets a loaded scenario without incrementing generation metrics."""
+    st.session_state.current_scenario = scenario_data
+    st.session_state.current_frame_index = 0
+
 def next_frame():
     """Advances to the next frame if possible."""
     if st.session_state.current_scenario and st.session_state.current_frame_index < len(st.session_state.current_scenario.frames) - 1:

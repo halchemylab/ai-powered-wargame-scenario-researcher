@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import time
+import json
 from dotenv import load_dotenv
 from engine import ai_handler, map_renderer
 from utils import state_manager, exporter
@@ -30,7 +31,22 @@ with st.sidebar:
     col2.metric("Frames", st.session_state.total_frames_generated)
     
     st.divider()
-    
+
+    # Save/Load
+    with st.expander("💾 Save/Load Scenario", expanded=False):
+        uploaded_file = st.file_uploader("Load JSON Scenario", type=["json"])
+        if uploaded_file is not None:
+            try:
+                # Read and parse
+                json_data = uploaded_file.getvalue().decode("utf-8")
+                loaded_scenario = ai_handler.WargameScenario.model_validate_json(json_data)
+                state_manager.load_existing_scenario(loaded_scenario)
+                st.success("Scenario loaded!")
+                time.sleep(1)
+                st.rerun()
+            except Exception as e:
+                st.error(f"Invalid file: {e}")
+
     # API Key
     default_key = os.getenv("OPENAI_API_KEY", "")
     api_key = st.text_input(
@@ -140,12 +156,23 @@ if st.session_state.current_scenario:
         
         # Export
         report_md = exporter.generate_markdown_report(scenario)
-        st.download_button(
-            label="Download Commander's Journal",
-            data=report_md,
-            file_name="commanders_journal.md",
-            mime="text/markdown"
-        )
+        col_dl1, col_dl2 = st.columns(2)
+        with col_dl1:
+            st.download_button(
+                label="Download Commander's Journal",
+                data=report_md,
+                file_name="commanders_journal.md",
+                mime="text/markdown",
+                use_container_width=True
+            )
+        with col_dl2:
+            st.download_button(
+                label="💾 Download Scenario JSON",
+                data=scenario.model_dump_json(indent=2),
+                file_name="wargame_scenario.json",
+                mime="application/json",
+                use_container_width=True
+            )
         
 else:
     st.info("Enter a context above and click 'Generate Simulation' to begin.")
