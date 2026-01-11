@@ -14,6 +14,20 @@ TERRAIN_COLORSCALE = [
     [0.75, COLOR_FOREST], [1.0, COLOR_FOREST]
 ]
 
+# Unit Icons Mapping
+UNIT_ICONS = {
+    "infantry": "💂",
+    "tank": "🛡️",
+    "armor": "🛡️",
+    "artillery": "🎯",
+    "recon": "👁️",
+    "scout": "👁️",
+    "hq": "🚩",
+    "command": "🚩",
+    "mechanized": "🚜",
+    "default": "⏺️"
+}
+
 def render_map(terrain_map, units):
     """
     Generates a Plotly figure for the tactical map.
@@ -21,7 +35,7 @@ def render_map(terrain_map, units):
     Args:
         terrain_map (list of list of int): 20x20 grid.
         units (list of objects): List of units for the current frame. 
-                                 Expected attrs: unit_id, side, x, y.
+                                 Expected attrs: unit_id, side, x, y, type.
     
     Returns:
         go.Figure: The Plotly figure object.
@@ -54,25 +68,44 @@ def render_map(terrain_map, units):
             x_vals.append(unit.x)
             y_vals.append(unit.y)
             
-            # Simple Emoji logic based on Side
-            if unit.side.lower() == 'blue' or unit.side.lower() == 'a':
-                symbol = '🔵' # Circle for generic
+            # Side Color Logic
+            if unit.side.lower() in ['blue', 'a']:
                 color = 'blue'
             else:
-                symbol = '🔴'
                 color = 'red'
             
-            # Using text markers (emojis)
+            # Icon Logic
+            u_type = unit.type.lower()
+            symbol = UNIT_ICONS["default"]
+            
+            # Check for matches in our dictionary keys
+            for key, icon in UNIT_ICONS.items():
+                if key in u_type:
+                    symbol = icon
+                    # Prioritize specific matches? loop order matters. 
+                    # Dictionary order is insertion ordered in modern Python.
+                    # Given the list, "infantry" will match "mechanized infantry" if "infantry" is checked first.
+                    # So we should probably check longer words or specific types if needed, 
+                    # but simple iteration is okay for now. 
+                    # If we want "mechanized infantry" to be "mechanized", we should put "mechanized" first or break.
+                    break 
+
             texts.append(symbol)
             colors.append(color)
-            hover_texts.append(f"{unit.side} - {unit.unit_id}")
+            hover_texts.append(f"{unit.side} - {unit.unit_id} ({unit.type})")
 
         fig.add_trace(go.Scatter(
             x=x_vals,
             y=y_vals,
-            mode='text',
+            mode='markers+text',
             text=texts,
-            textfont=dict(size=20),
+            textfont=dict(size=20, color='black'), # Black icons for contrast
+            marker=dict(
+                size=30,
+                color=colors,
+                opacity=0.5, # Transparent bubble to show terrain/grid slightly
+                line=dict(width=1, color='white')
+            ),
             hoverinfo='text',
             hovertext=hover_texts,
             showlegend=False
