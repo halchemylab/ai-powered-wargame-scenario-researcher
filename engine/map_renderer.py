@@ -1,0 +1,105 @@
+import plotly.graph_objects as go
+
+# Color constants
+COLOR_OPEN = '#d2b48c'   # Tan
+COLOR_WATER = '#4682b4'  # SteelBlue
+COLOR_URBAN = '#696969'  # DimGray
+COLOR_FOREST = '#228b22' # ForestGreen
+
+# Map integer to color
+TERRAIN_COLORSCALE = [
+    [0.0, COLOR_OPEN],   [0.25, COLOR_OPEN],
+    [0.25, COLOR_WATER], [0.5, COLOR_WATER],
+    [0.5, COLOR_URBAN],  [0.75, COLOR_URBAN],
+    [0.75, COLOR_FOREST], [1.0, COLOR_FOREST]
+]
+
+def render_map(terrain_map, units):
+    """
+    Generates a Plotly figure for the tactical map.
+    
+    Args:
+        terrain_map (list of list of int): 20x20 grid.
+        units (list of objects): List of units for the current frame. 
+                                 Expected attrs: unit_id, side, x, y.
+    
+    Returns:
+        go.Figure: The Plotly figure object.
+    """
+    
+    # 1. Base Layer: Terrain Heatmap
+    # Using discrete colorscale for categorical data
+    fig = go.Figure()
+
+    fig.add_trace(go.Heatmap(
+        z=terrain_map,
+        colorscale=TERRAIN_COLORSCALE,
+        showscale=False, # Hide color bar
+        zmin=0,
+        zmax=3,
+        hoverinfo='skip' # Disable hover on terrain for cleaner look
+    ))
+
+    # 2. Overlay: Units
+    if units:
+        x_vals = []
+        y_vals = []
+        texts = []
+        colors = []
+        hover_texts = []
+        
+        for unit in units:
+            # Check for coordinates, adjust for 0-indexed logic if needed. 
+            # Assuming 0-19 for 20x20. Plotly Heatmap x/y align with indices.
+            x_vals.append(unit.x)
+            y_vals.append(unit.y)
+            
+            # Simple Emoji logic based on Side
+            if unit.side.lower() == 'blue' or unit.side.lower() == 'a':
+                symbol = '🔵' # Circle for generic
+                color = 'blue'
+            else:
+                symbol = '🔴'
+                color = 'red'
+            
+            # Using text markers (emojis)
+            texts.append(symbol)
+            colors.append(color)
+            hover_texts.append(f"{unit.side} - {unit.unit_id}")
+
+        fig.add_trace(go.Scatter(
+            x=x_vals,
+            y=y_vals,
+            mode='text',
+            text=texts,
+            textfont=dict(size=20),
+            hoverinfo='text',
+            hovertext=hover_texts,
+            showlegend=False
+        ))
+
+    # 3. Styling
+    fig.update_layout(
+        width=600,
+        height=600,
+        margin=dict(l=10, r=10, t=10, b=10),
+        xaxis=dict(
+            showgrid=True, 
+            zeroline=False, 
+            visible=False, 
+            range=[-0.5, 19.5],
+            constrain='domain'
+        ),
+        yaxis=dict(
+            showgrid=True, 
+            zeroline=False, 
+            visible=False, 
+            range=[-0.5, 19.5],
+            scaleanchor='x',
+            scaleratio=1
+        ),
+        paper_bgcolor='rgba(0,0,0,0)', # Transparent background
+        plot_bgcolor='rgba(0,0,0,0)'
+    )
+
+    return fig
