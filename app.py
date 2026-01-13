@@ -163,10 +163,12 @@ if st.session_state.current_scenario:
         
         # Export
         report_md = exporter.generate_markdown_report(scenario)
-        col_dl1, col_dl2 = st.columns(2)
+        report_pdf = exporter.generate_pdf_report(scenario)
+        
+        col_dl1, col_dl2, col_dl3 = st.columns(3)
         with col_dl1:
             st.download_button(
-                label="Download Commander's Journal",
+                label="📄 Journal (MD)",
                 data=report_md,
                 file_name="commanders_journal.md",
                 mime="text/markdown",
@@ -174,7 +176,15 @@ if st.session_state.current_scenario:
             )
         with col_dl2:
             st.download_button(
-                label="💾 Download Scenario JSON",
+                label="📕 Journal (PDF)",
+                data=report_pdf,
+                file_name="commanders_journal.pdf",
+                mime="application/pdf",
+                use_container_width=True
+            )
+        with col_dl3:
+            st.download_button(
+                label="💾 Scenario (JSON)",
                 data=scenario.model_dump_json(indent=2),
                 file_name="wargame_scenario.json",
                 mime="application/json",

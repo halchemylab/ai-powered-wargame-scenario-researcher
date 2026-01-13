@@ -6,3 +6,4 @@ pandas
 pydantic
 duckduckgo-search
 pytest
+fpdf2
