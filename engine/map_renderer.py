@@ -23,7 +23,7 @@ def render_map(terrain_map, units):
         colorscale=config.TERRAIN_COLORSCALE,
         showscale=False, # Hide color bar
         zmin=0,
-        zmax=3,
+        zmax=config.TerrainType.FOREST.value,
         hoverinfo='skip' # Disable hover on terrain for cleaner look
     ))
 
@@ -42,7 +42,7 @@ def render_map(terrain_map, units):
             y_vals.append(unit.y)
             
             # Side Color Logic
-            if unit.side.lower() in ['blue', 'a']:
+            if unit.side == config.UnitSide.BLUE:
                 color = 'blue'
             else:
                 color = 'red'

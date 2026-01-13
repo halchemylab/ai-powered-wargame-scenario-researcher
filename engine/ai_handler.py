@@ -11,7 +11,7 @@ from duckduckgo_search import DDGS
 
 class Unit(BaseModel):
     unit_id: str = Field(..., description="Unique identifier for the unit (e.g., 'A-1', 'B-Tank').")
-    side: Literal['Blue', 'Red'] = Field(..., description="The side the unit belongs to.")
+    side: config.UnitSide = Field(..., description="The side the unit belongs to.")
     type: str = Field(..., description="Type of unit (e.g., Infantry, Tank, Artillery).")
     x: int = Field(..., ge=0, le=19, description="X coordinate on the 20x20 grid (0-19).")
     y: int = Field(..., ge=0, le=19, description="Y coordinate on the 20x20 grid (0-19).")
