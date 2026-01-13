@@ -44,11 +44,29 @@ def search_realtime_intel(query: str, max_results: int = 5) -> str:
     except Exception as e:
         return f"Warning: Could not fetch real-time data ({str(e)}). Proceeding with internal knowledge only."
 
-def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o", use_search: bool = False) -> WargameScenario:
+def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o", use_search: bool = False, use_mock: bool = False) -> WargameScenario:
     """
     Calls OpenAI API to generate a wargame scenario. 
     Optionally augments context with web search.
     """
+    if use_mock:
+        try:
+            # Load from engine/mock_data.json
+            import os
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            mock_path = os.path.join(current_dir, "mock_data.json")
+            
+            with open(mock_path, "r") as f:
+                data = json.load(f)
+            
+            # Validate with Pydantic
+            scenario = WargameScenario(**data)
+            # Add a note to the first frame description so the user knows
+            scenario.frames[0].frame_description = "[MOCK MODE] " + scenario.frames[0].frame_description
+            return scenario
+        except Exception as e:
+            raise RuntimeError(f"Failed to load mock data: {str(e)}")
+
     if not api_key:
          raise ValueError("OpenAI API Key is missing.")
 

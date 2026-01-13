@@ -1,0 +1,59 @@
+{
+  "terrain_map": [
+    [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0],
+    [0, 0, 0, 3, 3, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 2, 2, 2, 0, 0],
+    [0, 0, 3, 3, 3, 3, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0],
+    [0, 0, 3, 3, 3, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 2, 2, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 2, 2, 2, 2, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 2, 2, 2, 2, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 2, 2, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0]
+  ],
+  "frames": [
+    {
+      "frame_description": "Initial Deployment: Blue forces establish defensive positions near the western forest, while Red armor assembles in the eastern urban sector.",
+      "unit_positions": [
+        {"unit_id": "B-Inf-1", "side": "Blue", "type": "Infantry", "x": 2, "y": 2},
+        {"unit_id": "B-Inf-2", "side": "Blue", "type": "Infantry", "x": 2, "y": 4},
+        {"unit_id": "B-Tank-1", "side": "Blue", "type": "Tank", "x": 1, "y": 3},
+        {"unit_id": "R-Tank-1", "side": "Red", "type": "Tank", "x": 16, "y": 14},
+        {"unit_id": "R-Mech-1", "side": "Red", "type": "Mechanized", "x": 17, "y": 13},
+        {"unit_id": "R-Recon-1", "side": "Red", "type": "Recon", "x": 15, "y": 10}
+      ]
+    },
+    {
+      "frame_description": "Red Recon probes the river crossing. Blue Infantry digs in.",
+      "unit_positions": [
+        {"unit_id": "B-Inf-1", "side": "Blue", "type": "Infantry", "x": 2, "y": 2},
+        {"unit_id": "B-Inf-2", "side": "Blue", "type": "Infantry", "x": 2, "y": 4},
+        {"unit_id": "B-Tank-1", "side": "Blue", "type": "Tank", "x": 2, "y": 3},
+        {"unit_id": "R-Tank-1", "side": "Red", "type": "Tank", "x": 15, "y": 13},
+        {"unit_id": "R-Mech-1", "side": "Red", "type": "Mechanized", "x": 16, "y": 12},
+        {"unit_id": "R-Recon-1", "side": "Red", "type": "Recon", "x": 13, "y": 10}
+      ]
+    },
+    {
+      "frame_description": "Contact! Red Recon spotted by Blue forward elements. Red Armor advances to support.",
+      "unit_positions": [
+        {"unit_id": "B-Inf-1", "side": "Blue", "type": "Infantry", "x": 3, "y": 2},
+        {"unit_id": "B-Inf-2", "side": "Blue", "type": "Infantry", "x": 3, "y": 4},
+        {"unit_id": "B-Tank-1", "side": "Blue", "type": "Tank", "x": 3, "y": 3},
+        {"unit_id": "R-Tank-1", "side": "Red", "type": "Tank", "x": 13, "y": 12},
+        {"unit_id": "R-Mech-1", "side": "Red", "type": "Mechanized", "x": 14, "y": 11},
+        {"unit_id": "R-Recon-1", "side": "Red", "type": "Recon", "x": 11, "y": 10}
+      ]
+    }
+  ]
+}

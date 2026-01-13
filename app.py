@@ -63,6 +63,12 @@ with st.sidebar:
         help="Change to 'gpt-5.2-preview' (or similar) if you have access. Default is 'gpt-4o'."
     )
     
+    use_mock = st.checkbox(
+        "Enable Offline / Mock Mode",
+        value=False,
+        help="Use pre-generated data for testing without API usage."
+    )
+    
     st.caption("AI Model: Structured Outputs Enabled")
 
 # --- Main Area ---
@@ -90,9 +96,9 @@ with st.container():
         )
     
     if st.button("Generate Simulation", type="primary"):
-        if not api_key:
+        if not api_key and not use_mock:
             st.error("Please provide an OpenAI API Key.")
-        elif not context_input:
+        elif not context_input and not use_mock:
             st.warning("Please enter a research topic.")
         else:
             with st.spinner("Analyzing tactics and generating scenario..."):
@@ -102,7 +108,8 @@ with st.container():
                         api_key, 
                         context_input, 
                         model=model_name, 
-                        use_search=use_search
+                        use_search=use_search,
+                        use_mock=use_mock
                     )
                     
                     # Update State
