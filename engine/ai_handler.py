@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Literal, Optional
 import openai
+from openai import AuthenticationError, RateLimitError, APIConnectionError, APIError
 import os
 import json
 import config
@@ -41,13 +42,16 @@ def search_realtime_intel(query: str, max_results: int = 5) -> str:
         
         return intel_report
     except Exception as e:
-        return f"Error fetching real-time data: {str(e)}"
+        return f"Warning: Could not fetch real-time data ({str(e)}). Proceeding with internal knowledge only."
 
 def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o", use_search: bool = False) -> WargameScenario:
     """
     Calls OpenAI API to generate a wargame scenario. 
     Optionally augments context with web search.
     """
+    if not api_key:
+         raise ValueError("OpenAI API Key is missing.")
+
     client = openai.Client(api_key=api_key)
     
     final_context = context
@@ -76,6 +80,13 @@ def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o", use_search
         scenario = completion.choices[0].message.parsed
         return scenario
 
+    except AuthenticationError:
+        raise ValueError("Invalid OpenAI API Key. Please check your credentials.")
+    except RateLimitError:
+        raise RuntimeError("OpenAI API rate limit exceeded. Please try again later.")
+    except APIConnectionError:
+        raise RuntimeError("Failed to connect to OpenAI API. Please check your internet connection.")
+    except APIError as e:
+        raise RuntimeError(f"OpenAI API returned an error: {str(e)}")
     except Exception as e:
-        # In a real app, you might want to log this or return a specific error structure
-        raise RuntimeError(f"AI Generation failed: {str(e)}")
+        raise RuntimeError(f"An unexpected error occurred during scenario generation: {str(e)}")
