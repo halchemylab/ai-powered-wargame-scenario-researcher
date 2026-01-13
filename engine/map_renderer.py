@@ -1,32 +1,5 @@
 import plotly.graph_objects as go
-
-# Color constants
-COLOR_OPEN = '#d2b48c'   # Tan
-COLOR_WATER = '#4682b4'  # SteelBlue
-COLOR_URBAN = '#696969'  # DimGray
-COLOR_FOREST = '#228b22' # ForestGreen
-
-# Map integer to color
-TERRAIN_COLORSCALE = [
-    [0.0, COLOR_OPEN],   [0.25, COLOR_OPEN],
-    [0.25, COLOR_WATER], [0.5, COLOR_WATER],
-    [0.5, COLOR_URBAN],  [0.75, COLOR_URBAN],
-    [0.75, COLOR_FOREST], [1.0, COLOR_FOREST]
-]
-
-# Unit Icons Mapping
-UNIT_ICONS = {
-    "infantry": "💂",
-    "tank": "🛡️",
-    "armor": "🛡️",
-    "artillery": "🎯",
-    "recon": "👁️",
-    "scout": "👁️",
-    "hq": "🚩",
-    "command": "🚩",
-    "mechanized": "🚜",
-    "default": "⏺️"
-}
+import config
 
 def render_map(terrain_map, units):
     """
@@ -47,7 +20,7 @@ def render_map(terrain_map, units):
 
     fig.add_trace(go.Heatmap(
         z=terrain_map,
-        colorscale=TERRAIN_COLORSCALE,
+        colorscale=config.TERRAIN_COLORSCALE,
         showscale=False, # Hide color bar
         zmin=0,
         zmax=3,
@@ -76,10 +49,10 @@ def render_map(terrain_map, units):
             
             # Icon Logic
             u_type = unit.type.lower()
-            symbol = UNIT_ICONS["default"]
+            symbol = config.UNIT_ICONS["default"]
             
             # Check for matches in our dictionary keys
-            for key, icon in UNIT_ICONS.items():
+            for key, icon in config.UNIT_ICONS.items():
                 if key in u_type:
                     symbol = icon
                     # Prioritize specific matches? loop order matters. 
@@ -93,6 +66,7 @@ def render_map(terrain_map, units):
             texts.append(symbol)
             colors.append(color)
             hover_texts.append(f"{unit.side} - {unit.unit_id} ({unit.type})")
+
 
         fig.add_trace(go.Scatter(
             x=x_vals,
