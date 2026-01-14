@@ -113,4 +113,35 @@ def render_map(terrain_map, units):
         plot_bgcolor='rgba(0,0,0,0)'
     )
 
+def render_accumulated_heatmap(heatmap_grid):
+    """
+    Renders a heatmap of accumulated unit positions.
+    """
+    height = len(heatmap_grid)
+    width = len(heatmap_grid[0]) if height > 0 else 20
+    
+    fig = go.Figure(data=go.Heatmap(
+        z=heatmap_grid,
+        colorscale='Hot',
+        showscale=True
+    ))
+    
+    fig.update_layout(
+        width=600,
+        height=600,
+        margin=dict(l=10, r=10, t=10, b=10),
+        xaxis=dict(
+            visible=False, 
+            range=[-0.5, width - 0.5],
+            constrain='domain'
+        ),
+        yaxis=dict(
+            visible=False, 
+            range=[-0.5, height - 0.5],
+            scaleanchor='x',
+            scaleratio=1
+        ),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)'
+    )
     return fig

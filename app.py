@@ -3,7 +3,7 @@ import os
 import time
 import json
 from dotenv import load_dotenv
-from engine import ai_handler, map_renderer
+from engine import ai_handler, map_renderer, analytics
 from utils import state_manager, exporter
 
 # Load environment variables
@@ -144,65 +144,86 @@ if st.session_state.current_scenario:
     # Get current frame data
     current_frame = scenario.frames[current_idx]
     
-    # Layout: Map on Left, Info on Right
-    col_map, col_info = st.columns([2, 1])
+    tab_sim, tab_anl = st.tabs(["Tactical View", "Analytics & AAR"])
     
-    with col_map:
-        st.subheader(f"Tactical Map - Frame {current_idx + 1}/{total_frames}")
-        fig = map_renderer.render_map(
-            scenario.terrain_map, 
-            current_frame.unit_positions
-        )
-        st.plotly_chart(fig, use_container_width=True)
+    with tab_sim:
+        # Layout: Map on Left, Info on Right
+        col_map, col_info = st.columns([2, 1])
         
-    with col_info:
-        st.subheader("Situation Brief")
-        st.info(current_frame.frame_description)
-        
-        st.subheader("Controls")
-        c1, c2, c3 = st.columns([1, 1, 2])
-        
-        with c1:
-            if st.button("◀ Prev"):
-                state_manager.prev_frame()
-                st.rerun()
-                
-        with c2:
-            if st.button("Next ▶"):
-                state_manager.next_frame()
-                st.rerun()
-        
-        st.markdown("---")
-        
-        # Export
-        report_md = exporter.generate_markdown_report(scenario)
-        report_pdf = exporter.generate_pdf_report(scenario)
-        
-        col_dl1, col_dl2, col_dl3 = st.columns(3)
-        with col_dl1:
-            st.download_button(
-                label="📄 Journal (MD)",
-                data=report_md,
-                file_name="commanders_journal.md",
-                mime="text/markdown",
-                use_container_width=True
+        with col_map:
+            st.subheader(f"Tactical Map - Frame {current_idx + 1}/{total_frames}")
+            fig = map_renderer.render_map(
+                scenario.terrain_map, 
+                current_frame.unit_positions
             )
-        with col_dl2:
-            st.download_button(
-                label="📕 Journal (PDF)",
-                data=report_pdf,
-                file_name="commanders_journal.pdf",
-                mime="application/pdf",
-                use_container_width=True
-            )
-        with col_dl3:
-            st.download_button(
-                label="💾 Scenario (JSON)",
-                data=scenario.model_dump_json(indent=2),
-                file_name="wargame_scenario.json",
-                mime="application/json",
-                use_container_width=True
-            )
+            st.plotly_chart(fig, use_container_width=True)
+            
+        with col_info:
+            st.subheader("Situation Brief")
+            st.info(current_frame.frame_description)
+            
+            st.subheader("Controls")
+            c1, c2, c3 = st.columns([1, 1, 2])
+            
+            with c1:
+                if st.button("◀ Prev"):
+                    state_manager.prev_frame()
+                    st.rerun()
+                    
+            with c2:
+                if st.button("Next ▶"):
+                    state_manager.next_frame()
+                    st.rerun()
+            
+            st.markdown("---")
+            
+            # Export
+            report_md = exporter.generate_markdown_report(scenario)
+            report_pdf = exporter.generate_pdf_report(scenario)
+            
+            col_dl1, col_dl2, col_dl3 = st.columns(3)
+            with col_dl1:
+                st.download_button(
+                    label="📄 Journal (MD)",
+                    data=report_md,
+                    file_name="commanders_journal.md",
+                    mime="text/markdown",
+                    use_container_width=True
+                )
+            with col_dl2:
+                st.download_button(
+                    label="📕 Journal (PDF)",
+                    data=report_pdf,
+                    file_name="commanders_journal.pdf",
+                    mime="application/pdf",
+                    use_container_width=True
+                )
+            with col_dl3:
+                st.download_button(
+                    label="💾 Scenario (JSON)",
+                    data=scenario.model_dump_json(indent=2),
+                    file_name="wargame_scenario.json",
+                    mime="application/json",
+                    use_container_width=True
+                )
+    
+    with tab_anl:
+        st.header("After-Action Analytics")
+        
+        col_a1, col_a2 = st.columns(2)
+        
+        with col_a1:
+            st.subheader("Force Correlation (Attrition)")
+            df_corr = analytics.calculate_force_correlation(scenario)
+            st.line_chart(df_corr)
+            st.caption("Unit counts per side over time.")
+            
+        with col_a2:
+            st.subheader("Zone of Control Heatmap")
+            heatmap_data = analytics.calculate_heatmap(scenario)
+            fig_heat = map_renderer.render_accumulated_heatmap(heatmap_data)
+            st.plotly_chart(fig_heat, use_container_width=True)
+            st.caption("Accumulated unit presence per grid sector.")
         
 else:
     st.info("Enter a context above and click 'Generate Simulation' to begin.")

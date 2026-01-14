@@ -1,6 +1,7 @@
 import pandas as pd
 import io
 from fpdf import FPDF
+import config
 
 class PDFReport(FPDF):
     def header(self):
@@ -53,6 +54,26 @@ def generate_markdown_report(scenario_data):
         
         lines.append("\n---")
     
+    # Attrition Report
+    lines.append("## Attrition Report")
+    if scenario_data.frames:
+        first_frame = scenario_data.frames[0]
+        last_frame = scenario_data.frames[-1]
+        
+        def count_units(frame):
+            b, r = 0, 0
+            if frame.unit_positions:
+                for u in frame.unit_positions:
+                    if u.side == config.UnitSide.BLUE: b += 1
+                    else: r += 1
+            return b, r
+
+        b_start, r_start = count_units(first_frame)
+        b_end, r_end = count_units(last_frame)
+        
+        lines.append(f"- **Blue Force:** Start {b_start} -> End {b_end} (Losses: {b_start - b_end})")
+        lines.append(f"- **Red Force:** Start {r_start} -> End {r_end} (Losses: {r_start - r_end})")
+
     return "\n".join(lines)
 
 def generate_pdf_report(scenario_data):
@@ -102,5 +123,29 @@ def generate_pdf_report(scenario_data):
         pdf.ln(5)
         pdf.line(10, pdf.get_y(), 200, pdf.get_y()) # Horizontal line
         pdf.ln(5)
+
+    # Attrition Report
+    pdf.add_page()
+    pdf.set_font("Helvetica", 'B', 14)
+    pdf.cell(0, 10, "Attrition Report", ln=True)
+    pdf.set_font("Helvetica", size=12)
+    
+    if scenario_data.frames:
+        first_frame = scenario_data.frames[0]
+        last_frame = scenario_data.frames[-1]
+        
+        def count_units(frame):
+            b, r = 0, 0
+            if frame.unit_positions:
+                for u in frame.unit_positions:
+                    if u.side == config.UnitSide.BLUE: b += 1
+                    else: r += 1
+            return b, r
+
+        b_start, r_start = count_units(first_frame)
+        b_end, r_end = count_units(last_frame)
+        
+        pdf.cell(0, 10, f"Blue Force: Start {b_start} -> End {b_end} (Losses: {b_start - b_end})", ln=True)
+        pdf.cell(0, 10, f"Red Force: Start {r_start} -> End {r_end} (Losses: {r_start - r_end})", ln=True)
 
     return bytes(pdf.output())
