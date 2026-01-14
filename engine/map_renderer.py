@@ -6,13 +6,17 @@ def render_map(terrain_map, units):
     Generates a Plotly figure for the tactical map.
     
     Args:
-        terrain_map (list of list of int): 20x20 grid.
+        terrain_map (list of list of int): N x M grid.
         units (list of objects): List of units for the current frame. 
                                  Expected attrs: unit_id, side, x, y, type.
     
     Returns:
         go.Figure: The Plotly figure object.
     """
+    
+    # Calculate dimensions
+    map_height = len(terrain_map)
+    map_width = len(terrain_map[0]) if map_height > 0 else 20
     
     # 1. Base Layer: Terrain Heatmap
     # Using discrete colorscale for categorical data
@@ -94,14 +98,14 @@ def render_map(terrain_map, units):
             showgrid=True, 
             zeroline=False, 
             visible=False, 
-            range=[-0.5, 19.5],
+            range=[-0.5, map_width - 0.5],
             constrain='domain'
         ),
         yaxis=dict(
             showgrid=True, 
             zeroline=False, 
             visible=False, 
-            range=[-0.5, 19.5],
+            range=[-0.5, map_height - 0.5],
             scaleanchor='x',
             scaleratio=1
         ),

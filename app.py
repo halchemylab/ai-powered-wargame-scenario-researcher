@@ -63,6 +63,17 @@ with st.sidebar:
         help="Change to 'gpt-5.2-preview' (or similar) if you have access. Default is 'gpt-4o'."
     )
     
+    st.divider()
+    
+    # Map Configuration
+    st.subheader("Scenario Settings")
+    map_size = st.slider("Grid Size", min_value=10, max_value=40, value=20, step=5, help="Size of the battlefield (NxN).")
+    terrain_type = st.selectbox(
+        "Terrain Style", 
+        ["Balanced", "Open Plains", "Dense Urban", "Forest Heavy", "Water/Islands", "Desert"],
+        index=0
+    )
+    
     use_mock = st.checkbox(
         "Enable Offline / Mock Mode",
         value=False,
@@ -109,7 +120,9 @@ with st.container():
                         context_input, 
                         model=model_name, 
                         use_search=use_search,
-                        use_mock=use_mock
+                        use_mock=use_mock,
+                        map_size=map_size,
+                        terrain_type=terrain_type
                     )
                     
                     # Update State

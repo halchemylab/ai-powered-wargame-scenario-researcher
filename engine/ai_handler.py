@@ -13,15 +13,15 @@ class Unit(BaseModel):
     unit_id: str = Field(..., description="Unique identifier for the unit (e.g., 'A-1', 'B-Tank').")
     side: config.UnitSide = Field(..., description="The side the unit belongs to.")
     type: str = Field(..., description="Type of unit (e.g., Infantry, Tank, Artillery).")
-    x: int = Field(..., ge=0, le=19, description="X coordinate on the 20x20 grid (0-19).")
-    y: int = Field(..., ge=0, le=19, description="Y coordinate on the 20x20 grid (0-19).")
+    x: int = Field(..., ge=0, description="X coordinate on the grid.")
+    y: int = Field(..., ge=0, description="Y coordinate on the grid.")
 
 class Frame(BaseModel):
     frame_description: str = Field(..., description="Narrative description of the tactical situation in this time step.")
     unit_positions: List[Unit] = Field(..., description="List of all units and their positions in this frame.")
 
 class WargameScenario(BaseModel):
-    terrain_map: List[List[int]] = Field(..., description="20x20 integer matrix representing terrain. 0: Open, 1: Water, 2: Urban, 3: Forest.")
+    terrain_map: List[List[int]] = Field(..., description="N x N integer matrix representing terrain. 0: Open, 1: Water, 2: Urban, 3: Forest.")
     frames: List[Frame] = Field(..., description="Sequential frames depicting the tactical movement.")
 
 # --- Logic ---
@@ -44,7 +44,7 @@ def search_realtime_intel(query: str, max_results: int = 5) -> str:
     except Exception as e:
         return f"Warning: Could not fetch real-time data ({str(e)}). Proceeding with internal knowledge only."
 
-def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o", use_search: bool = False, use_mock: bool = False) -> WargameScenario:
+def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o", use_search: bool = False, use_mock: bool = False, map_size: int = 20, terrain_type: str = "Balanced") -> WargameScenario:
     """
     Calls OpenAI API to generate a wargame scenario. 
     Optionally augments context with web search.
@@ -90,7 +90,7 @@ def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o", use_search
             model=model,
             messages=[
                 {"role": "system", "content": config.SYSTEM_PROMPT},
-                {"role": "user", "content": f"Generate a tactical scenario based on this research topic: {final_context}"},
+                {"role": "user", "content": f"Generate a tactical scenario ({map_size}x{map_size} grid, {terrain_type} terrain) based on this research topic: {final_context}"},
             ],
             response_format=WargameScenario,
         )
