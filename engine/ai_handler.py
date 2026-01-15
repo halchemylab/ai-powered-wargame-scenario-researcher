@@ -27,6 +27,9 @@ class WargameScenario(BaseModel):
     terrain_map: List[List[int]] = Field(..., description="N x N integer matrix representing terrain. 0: Open, 1: Water, 2: Urban, 3: Forest.")
     frames: List[Frame] = Field(..., description="Sequential frames depicting the tactical movement.")
 
+class ScenarioExtension(BaseModel):
+    frames: List[Frame] = Field(..., description="Sequential frames continuing the tactical movement.")
+
 # --- Logic ---
 
 def search_realtime_intel(query: str, max_results: int = 5) -> str:
@@ -46,6 +49,53 @@ def search_realtime_intel(query: str, max_results: int = 5) -> str:
         return intel_report
     except Exception as e:
         return f"Warning: Could not fetch real-time data ({str(e)}). Proceeding with internal knowledge only."
+
+def continue_scenario(api_key: str, current_scenario: WargameScenario, current_frame_idx: int, context: str, model: str = "gpt-4o") -> List[Frame]:
+    """
+    Generates new frames continuing from the specified frame index.
+    """
+    if not api_key:
+        raise ValueError("OpenAI API Key is missing.")
+
+    client = openai.Client(api_key=api_key)
+
+    # Prepare context
+    last_frame = current_scenario.frames[current_frame_idx]
+    
+    # Serialize terrain and units for the prompt
+    # Simplified terrain representation to save tokens/complexity if needed, but 20x20 is small enough.
+    
+    prompt = f"""
+    **Mission Update:**
+    The user has intervened or requested a branch from Frame {current_frame_idx + 1}.
+    
+    **Context:**
+    {context}
+    
+    **Current Tactical Situation (Frame {current_frame_idx + 1}):**
+    - Units: {json.dumps([u.model_dump() for u in last_frame.unit_positions])}
+    
+    **Task:**
+    Generate 5 NEW frames continuing from this exact state. 
+    Maintain unit IDs. 
+    Respect the terrain (0=Open, 1=Water, 2=Urban, 3=Forest).
+    """
+
+    try:
+        completion = client.beta.chat.completions.parse(
+            model=model,
+            messages=[
+                {"role": "system", "content": config.SYSTEM_PROMPT + "\nIMPORTANT: You are CONTINUING an existing battle. Do not regenerate terrain. Only generate the 'frames' list."},
+                {"role": "user", "content": prompt},
+            ],
+            response_format=ScenarioExtension,
+        )
+        
+        extension = completion.choices[0].message.parsed
+        return extension.frames
+
+    except Exception as e:
+        raise RuntimeError(f"Error extending scenario: {str(e)}")
 
 def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o", use_search: bool = False, use_mock: bool = False, map_size: int = 20, terrain_type: str = "Balanced") -> WargameScenario:
     """

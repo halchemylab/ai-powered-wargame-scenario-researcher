@@ -257,6 +257,40 @@ if st.session_state.current_scenario:
 
             st.markdown("---")
             
+            # --- Branching / What-If ---
+            with st.expander("🔀 Scenario Branching (What-If)", expanded=False):
+                st.info("Modify the battlefield above, then generate a NEW timeline from this point.")
+                branch_context = st.text_input("Reason for Branch / New Orders", placeholder="e.g., Red tank forces breakthrough...")
+                
+                if st.button("Regenerate Future Frames", type="primary"):
+                    if not api_key:
+                        st.error("API Key required.")
+                    else:
+                        with st.spinner("Calculating alternative timeline..."):
+                            try:
+                                # 1. Truncate
+                                scenario.frames = scenario.frames[:current_idx+1]
+                                
+                                # 2. Generate Extension
+                                new_frames = ai_handler.continue_scenario(
+                                    api_key,
+                                    scenario,
+                                    current_idx,
+                                    branch_context or "Continue the battle from this new state.",
+                                    model=model_name
+                                )
+                                
+                                # 3. Append
+                                scenario.frames.extend(new_frames)
+                                st.session_state.total_frames_generated += len(new_frames)
+                                st.success(f"Branch created! Added {len(new_frames)} new frames.")
+                                time.sleep(1)
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"Branching failed: {e}")
+
+            st.markdown("---")
+
             # Export
             report_md = exporter.generate_markdown_report(scenario)
             report_pdf = exporter.generate_pdf_report(scenario)
