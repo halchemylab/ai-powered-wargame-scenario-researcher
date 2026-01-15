@@ -1,5 +1,6 @@
 import pandas as pd
 import io
+import json
 from fpdf import FPDF
 import config
 
@@ -13,6 +14,48 @@ class PDFReport(FPDF):
         self.set_y(-15)
         self.set_font('Helvetica', 'I', 8)
         self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
+
+def generate_vtt_json(scenario) -> str:
+    """
+    Generates a generic VTT-compatible JSON.
+    Includes map dimensions, terrain data, and unit tokens.
+    """
+    height = len(scenario.terrain_map)
+    width = len(scenario.terrain_map[0]) if height > 0 else 0
+    
+    # Structure suitable for import scripts or custom VTT modules
+    vtt_data = {
+        "format_version": "1.0",
+        "map": {
+            "width": width,
+            "height": height,
+            "grid_type": "square",
+            "cell_size_pixels": 100, # standard
+            "terrain_layer": scenario.terrain_map
+        },
+        "tokens": []
+    }
+    
+    # Export tokens from the *first* frame (initial setup)
+    if scenario.frames:
+        first_frame = scenario.frames[0]
+        for unit in first_frame.unit_positions:
+            token = {
+                "name": f"{unit.side.value} - {unit.type}",
+                "id": unit.unit_id,
+                "x": unit.x,
+                "y": unit.y,
+                "side": unit.side,
+                "stats": {
+                    "hp": unit.health,
+                    "range": unit.range,
+                    "status": unit.status
+                },
+                "icon": config.UNIT_ICONS.get(unit.type.lower(), config.UNIT_ICONS["default"])
+            }
+            vtt_data["tokens"].append(token)
+            
+    return json.dumps(vtt_data, indent=2)
 
 def generate_markdown_report(scenario_data):
     """

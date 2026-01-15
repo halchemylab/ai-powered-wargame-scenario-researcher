@@ -294,8 +294,9 @@ if st.session_state.current_scenario:
             # Export
             report_md = exporter.generate_markdown_report(scenario)
             report_pdf = exporter.generate_pdf_report(scenario)
+            vtt_json = exporter.generate_vtt_json(scenario)
             
-            col_dl1, col_dl2, col_dl3 = st.columns(3)
+            col_dl1, col_dl2, col_dl3, col_dl4 = st.columns(4)
             with col_dl1:
                 st.download_button(
                     label="📄 Journal (MD)",
@@ -319,6 +320,15 @@ if st.session_state.current_scenario:
                     file_name="wargame_scenario.json",
                     mime="application/json",
                     use_container_width=True
+                )
+            with col_dl4:
+                st.download_button(
+                    label="🎲 VTT Export",
+                    data=vtt_json,
+                    file_name="vtt_scenario.json",
+                    mime="application/json",
+                    use_container_width=True,
+                    help="Generic JSON format for Virtual Tabletop imports."
                 )
     
     with tab_anl:
