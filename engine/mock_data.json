@@ -25,34 +25,34 @@
     {
       "frame_description": "Initial Deployment: Blue forces establish defensive positions near the western forest, while Red armor assembles in the eastern urban sector.",
       "unit_positions": [
-        {"unit_id": "B-Inf-1", "side": "Blue", "type": "Infantry", "x": 2, "y": 2},
-        {"unit_id": "B-Inf-2", "side": "Blue", "type": "Infantry", "x": 2, "y": 4},
-        {"unit_id": "B-Tank-1", "side": "Blue", "type": "Tank", "x": 1, "y": 3},
-        {"unit_id": "R-Tank-1", "side": "Red", "type": "Tank", "x": 16, "y": 14},
-        {"unit_id": "R-Mech-1", "side": "Red", "type": "Mechanized", "x": 17, "y": 13},
-        {"unit_id": "R-Recon-1", "side": "Red", "type": "Recon", "x": 15, "y": 10}
+        {"unit_id": "B-Inf-1", "side": "Blue", "type": "Infantry", "x": 2, "y": 2, "health": 100, "range": 3, "status": "Digging In"},
+        {"unit_id": "B-Inf-2", "side": "Blue", "type": "Infantry", "x": 2, "y": 4, "health": 100, "range": 3, "status": "Guarding"},
+        {"unit_id": "B-Tank-1", "side": "Blue", "type": "Tank", "x": 1, "y": 3, "health": 100, "range": 8, "status": "Idle"},
+        {"unit_id": "R-Tank-1", "side": "Red", "type": "Tank", "x": 16, "y": 14, "health": 100, "range": 8, "status": "Staging"},
+        {"unit_id": "R-Mech-1", "side": "Red", "type": "Mechanized", "x": 17, "y": 13, "health": 100, "range": 6, "status": "Staging"},
+        {"unit_id": "R-Recon-1", "side": "Red", "type": "Recon", "x": 15, "y": 10, "health": 100, "range": 5, "status": "Scouting"}
       ]
     },
     {
       "frame_description": "Red Recon probes the river crossing. Blue Infantry digs in.",
       "unit_positions": [
-        {"unit_id": "B-Inf-1", "side": "Blue", "type": "Infantry", "x": 2, "y": 2},
-        {"unit_id": "B-Inf-2", "side": "Blue", "type": "Infantry", "x": 2, "y": 4},
-        {"unit_id": "B-Tank-1", "side": "Blue", "type": "Tank", "x": 2, "y": 3},
-        {"unit_id": "R-Tank-1", "side": "Red", "type": "Tank", "x": 15, "y": 13},
-        {"unit_id": "R-Mech-1", "side": "Red", "type": "Mechanized", "x": 16, "y": 12},
-        {"unit_id": "R-Recon-1", "side": "Red", "type": "Recon", "x": 13, "y": 10}
+        {"unit_id": "B-Inf-1", "side": "Blue", "type": "Infantry", "x": 2, "y": 2, "health": 100, "range": 3, "status": "Fortified"},
+        {"unit_id": "B-Inf-2", "side": "Blue", "type": "Infantry", "x": 2, "y": 4, "health": 100, "range": 3, "status": "Fortified"},
+        {"unit_id": "B-Tank-1", "side": "Blue", "type": "Tank", "x": 2, "y": 3, "health": 100, "range": 8, "status": "Moving to Hull Down"},
+        {"unit_id": "R-Tank-1", "side": "Red", "type": "Tank", "x": 15, "y": 13, "health": 100, "range": 8, "status": "Advancing"},
+        {"unit_id": "R-Mech-1", "side": "Red", "type": "Mechanized", "x": 16, "y": 12, "health": 100, "range": 6, "status": "Advancing"},
+        {"unit_id": "R-Recon-1", "side": "Red", "type": "Recon", "x": 13, "y": 10, "health": 100, "range": 5, "status": "Probing"}
       ]
     },
     {
       "frame_description": "Contact! Red Recon spotted by Blue forward elements. Red Armor advances to support.",
       "unit_positions": [
-        {"unit_id": "B-Inf-1", "side": "Blue", "type": "Infantry", "x": 3, "y": 2},
-        {"unit_id": "B-Inf-2", "side": "Blue", "type": "Infantry", "x": 3, "y": 4},
-        {"unit_id": "B-Tank-1", "side": "Blue", "type": "Tank", "x": 3, "y": 3},
-        {"unit_id": "R-Tank-1", "side": "Red", "type": "Tank", "x": 13, "y": 12},
-        {"unit_id": "R-Mech-1", "side": "Red", "type": "Mechanized", "x": 14, "y": 11},
-        {"unit_id": "R-Recon-1", "side": "Red", "type": "Recon", "x": 11, "y": 10}
+        {"unit_id": "B-Inf-1", "side": "Blue", "type": "Infantry", "x": 3, "y": 2, "health": 95, "range": 3, "status": "Engaged"},
+        {"unit_id": "B-Inf-2", "side": "Blue", "type": "Infantry", "x": 3, "y": 4, "health": 100, "range": 3, "status": "Alert"},
+        {"unit_id": "B-Tank-1", "side": "Blue", "type": "Tank", "x": 3, "y": 3, "health": 100, "range": 8, "status": "Targeting"},
+        {"unit_id": "R-Tank-1", "side": "Red", "type": "Tank", "x": 13, "y": 12, "health": 100, "range": 8, "status": "Flanking"},
+        {"unit_id": "R-Mech-1", "side": "Red", "type": "Mechanized", "x": 14, "y": 11, "health": 90, "range": 6, "status": "Supporting"},
+        {"unit_id": "R-Recon-1", "side": "Red", "type": "Recon", "x": 11, "y": 10, "health": 80, "range": 5, "status": "Retreating"}
       ]
     }
   ]

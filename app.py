@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import time
 import json
+import config
 from dotenv import load_dotenv
 from engine import ai_handler, map_renderer, analytics
 from utils import state_manager, exporter
@@ -175,6 +176,85 @@ if st.session_state.current_scenario:
                     state_manager.next_frame()
                     st.rerun()
             
+            st.markdown("---")
+
+            # --- Battlefield Editor ---
+            with st.expander("🛠️ Battlefield Editor", expanded=False):
+                st.caption(f"Edit Frame {current_idx + 1} at (X, Y)")
+                
+                # 1. Coordinate Selection
+                ec1, ec2 = st.columns(2)
+                with ec1:
+                    edit_x = st.number_input("Grid X", 0, len(scenario.terrain_map[0])-1, 0)
+                with ec2:
+                    edit_y = st.number_input("Grid Y", 0, len(scenario.terrain_map)-1, 0)
+                
+                # Context at Coords
+                found_unit = next((u for u in current_frame.unit_positions if u.x == edit_x and u.y == edit_y), None)
+                current_terrain = scenario.terrain_map[edit_y][edit_x]
+
+                st.divider()
+
+                # 2. Terrain Editing
+                st.subheader("Terrain")
+                tc1, tc2 = st.columns([3, 1])
+                with tc1:
+                    new_terrain = st.selectbox(
+                        "Set Terrain Type",
+                        options=[t.value for t in config.TerrainType],
+                        format_func=lambda x: config.TerrainType(x).name,
+                        index=int(current_terrain),
+                        key=f"terrain_sel_{edit_x}_{edit_y}"
+                    )
+                with tc2:
+                    st.write("") # Spacer
+                    st.write("") 
+                    if st.button("Set", key="btn_set_terrain"):
+                        scenario.terrain_map[edit_y][edit_x] = new_terrain
+                        st.rerun()
+
+                st.divider()
+
+                # 3. Unit Editing
+                st.subheader("Unit")
+                if found_unit:
+                    st.info(f"Present: {found_unit.side.value} {found_unit.type} ({found_unit.unit_id})")
+                else:
+                    st.caption("No unit at this location.")
+
+                uc1, uc2 = st.columns(2)
+                with uc1:
+                    u_side = st.selectbox("Side", ["Blue", "Red"], index=0 if not found_unit or found_unit.side == config.UnitSide.BLUE else 1)
+                    u_type = st.selectbox("Type", ["Infantry", "Tank", "Mechanized", "Recon", "Artillery", "HQ"], index=0)
+                with uc2:
+                    u_id = st.text_input("Unit ID", value=found_unit.unit_id if found_unit else "New-Unit-01")
+                    u_status = st.text_input("Status", value=found_unit.status if found_unit else "Deployed")
+                
+                uc3, uc4 = st.columns(2)
+                with uc3:
+                    if st.button("Place / Update Unit", type="primary"):
+                        # Remove existing if present to avoid dupes
+                        if found_unit:
+                            current_frame.unit_positions.remove(found_unit)
+                        
+                        new_unit = ai_handler.Unit(
+                            unit_id=u_id,
+                            side=config.UnitSide(u_side),
+                            type=u_type,
+                            x=edit_x,
+                            y=edit_y,
+                            health=found_unit.health if found_unit else 100,
+                            range=found_unit.range if found_unit else 3,
+                            status=u_status
+                        )
+                        current_frame.unit_positions.append(new_unit)
+                        st.rerun()
+                with uc4:
+                    if found_unit:
+                        if st.button("🗑️ Remove Unit", type="secondary"):
+                            current_frame.unit_positions.remove(found_unit)
+                            st.rerun()
+
             st.markdown("---")
             
             # Export

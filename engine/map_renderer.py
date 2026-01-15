@@ -69,7 +69,14 @@ def render_map(terrain_map, units):
 
             texts.append(symbol)
             colors.append(color)
-            hover_texts.append(f"{unit.side} - {unit.unit_id} ({unit.type})")
+            
+            # Expanded Tooltip
+            tooltip = (
+                f"<b>{unit.side.value} - {unit.unit_id}</b> ({unit.type})<br>"
+                f"Health: {unit.health}% | Range: {unit.range}<br>"
+                f"Status: {unit.status}"
+            )
+            hover_texts.append(tooltip)
 
 
         fig.add_trace(go.Scatter(

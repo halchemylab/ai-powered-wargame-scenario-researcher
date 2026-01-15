@@ -15,6 +15,9 @@ class Unit(BaseModel):
     type: str = Field(..., description="Type of unit (e.g., Infantry, Tank, Artillery).")
     x: int = Field(..., ge=0, description="X coordinate on the grid.")
     y: int = Field(..., ge=0, description="Y coordinate on the grid.")
+    health: int = Field(100, ge=0, le=100, description="Unit health percentage.")
+    range: int = Field(1, ge=1, description="Effective firing range in grid cells.")
+    status: str = Field("Active", description="Current tactical status (e.g., 'Moving', 'Engaged', 'Digging In').")
 
 class Frame(BaseModel):
     frame_description: str = Field(..., description="Narrative description of the tactical situation in this time step.")
