@@ -4,6 +4,126 @@ import config
 def render_map(terrain_map, units):
     """
     Generates a Plotly figure for the tactical map.
+    """
+    # ... existing render logic ...
+    # Re-implementing simplified version to ensure no regression or creating a separate function?
+    # The user instruction implies adding a NEW function.
+    # But I should check if I can modify the existing one or add a new one.
+    # Let's add render_map_on_mapbox separate for clarity.
+    pass # Replaced by the implementation below.
+
+def render_map_standard(terrain_map, units):
+    # This is the original logic, I need to keep it if I'm not replacing the whole file content.
+    # The tool replaces specific text. I will append the new function.
+    pass 
+
+def render_map_on_mapbox(terrain_map, units, center_lat, center_lon):
+    """
+    Renders the tactical map overlaid on a real-world Mapbox map.
+    """
+    # Approximate 2km x 2km box
+    # 1 degree lat approx 111km. 2km = 0.018 degrees.
+    # Grid is 20x20.
+    # Let's say center is (lat, lon).
+    # Top Left: lat + 0.009, lon - 0.009
+    # Cell size approx 0.0009 degrees.
+    
+    scale = 0.0009 
+    offset_x = center_lon - (10 * scale)
+    offset_y = center_lat - (10 * scale) # Actually mapbox y is lat.
+    # Grid (0,0) is usually Top-Left in 2D arrays, but Plotly Heatmap (0,0) is Bottom-Left.
+    # Let's assume (0,0) is Bottom-Left for Cartesian consistency.
+    
+    # Generate Terrain Points
+    lats = []
+    lons = []
+    colors = []
+    
+    height = len(terrain_map)
+    width = len(terrain_map[0])
+    
+    for y in range(height):
+        for x in range(width):
+            t_type = terrain_map[y][x]
+            # Simple mapping
+            # lat = center_lat - (height/2 * scale) + (y * scale)
+            # lon = center_lon - (width/2 * scale) + (x * scale)
+            
+            lat = offset_y + (y * scale)
+            lon = offset_x + (x * scale)
+            
+            lats.append(lat)
+            lons.append(lon)
+            
+            c_val = config.TERRAIN_COLORSCALE[t_type*2][1] # Get hex color
+            colors.append(c_val)
+
+    fig = go.Figure()
+
+    # Terrain Layer (Markers)
+    fig.add_trace(go.Scattermapbox(
+        lat=lats,
+        lon=lons,
+        mode='markers',
+        marker=go.scattermapbox.Marker(
+            size=15,
+            color=colors,
+            opacity=0.4,
+            symbol='square' 
+        ),
+        text=[f"Terrain: {t}" for t in colors], # Placeholder
+        hoverinfo='none',
+        name='Terrain'
+    ))
+
+    # Unit Layer
+    if units:
+        u_lats = []
+        u_lons = []
+        u_texts = []
+        u_colors = []
+        
+        for unit in units:
+            lat = offset_y + (unit.y * scale)
+            lon = offset_x + (unit.x * scale)
+            u_lats.append(lat)
+            u_lons.append(lon)
+            u_texts.append(f"{unit.side.value} {unit.type}")
+            
+            color = 'blue' if unit.side == config.UnitSide.BLUE else 'red'
+            u_colors.append(color)
+
+        fig.add_trace(go.Scattermapbox(
+            lat=u_lats,
+            lon=u_lons,
+            mode='markers+text',
+            marker=go.scattermapbox.Marker(
+                size=20,
+                color=u_colors,
+                symbol='circle'
+            ),
+            text=[config.UNIT_ICONS.get(u.type.lower(), "X") for u in units],
+            textposition="top center",
+            hovertext=u_texts,
+            name='Units'
+        ))
+
+    fig.update_layout(
+        mapbox=dict(
+            style="open-street-map",
+            center=dict(lat=center_lat, lon=center_lon),
+            zoom=13
+        ),
+        margin={"r":0,"t":0,"l":0,"b":0},
+        height=600,
+        showlegend=False
+    )
+    
+    return fig
+
+def render_map(terrain_map, units):
+    """
+    Generates a Plotly figure for the tactical map.
     
     Args:
         terrain_map (list of list of int): N x M grid.

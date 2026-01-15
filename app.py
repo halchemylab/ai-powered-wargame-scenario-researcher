@@ -75,6 +75,10 @@ with st.sidebar:
         index=0
     )
     
+    # Geo Input
+    st.markdown("#### 🌍 Geospatial Overlay")
+    geo_location = st.text_input("Real-World Location", placeholder="e.g., Avdiivka, Ukraine", help="Enter a city or region to overlay the grid on a real map.")
+    
     use_mock = st.checkbox(
         "Enable Offline / Mock Mode",
         value=False,
@@ -153,10 +157,32 @@ if st.session_state.current_scenario:
         
         with col_map:
             st.subheader(f"Tactical Map - Frame {current_idx + 1}/{total_frames}")
-            fig = map_renderer.render_map(
-                scenario.terrain_map, 
-                current_frame.unit_positions
-            )
+            
+            # Geo-Coding Logic
+            coords = None
+            if geo_location and not use_mock:
+                try:
+                    from geopy.geocoders import Nominatim
+                    geolocator = Nominatim(user_agent="wargame_researcher_v1")
+                    location = geolocator.geocode(geo_location)
+                    if location:
+                        coords = (location.latitude, location.longitude)
+                        st.caption(f"📍 Overlaying on: {location.address}")
+                except Exception as e:
+                    st.warning(f"Could not find location: {e}")
+            
+            if coords:
+                fig = map_renderer.render_map_on_mapbox(
+                    scenario.terrain_map,
+                    current_frame.unit_positions,
+                    coords[0],
+                    coords[1]
+                )
+            else:
+                fig = map_renderer.render_map(
+                    scenario.terrain_map, 
+                    current_frame.unit_positions
+                )
             st.plotly_chart(fig, use_container_width=True)
             
         with col_info:
