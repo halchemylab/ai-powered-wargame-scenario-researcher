@@ -24,6 +24,10 @@
   "frames": [
     {
       "frame_description": "Initial Deployment: Blue forces establish defensive positions near the western forest, while Red armor assembles in the eastern urban sector.",
+      "combat_log": [
+        {"source_unit_id": "B-Inf-1", "action_type": "Move", "details": "Digging foxholes in sector (2,2).", "outcome": "Entrenched"},
+        {"source_unit_id": "R-Recon-1", "action_type": "Move", "details": "Deployed forward to scout river crossings.", "outcome": "Scouting"}
+      ],
       "unit_positions": [
         {"unit_id": "B-Inf-1", "side": "Blue", "type": "Infantry", "x": 2, "y": 2, "health": 100, "range": 3, "status": "Digging In"},
         {"unit_id": "B-Inf-2", "side": "Blue", "type": "Infantry", "x": 2, "y": 4, "health": 100, "range": 3, "status": "Guarding"},
@@ -46,6 +50,10 @@
     },
     {
       "frame_description": "Contact! Red Recon spotted by Blue forward elements. Red Armor advances to support.",
+      "combat_log": [
+        {"source_unit_id": "B-Inf-1", "target_unit_id": "R-Recon-1", "action_type": "Fire", "details": "Small arms fire engagement.", "outcome": "Hit (20 dmg)"},
+        {"source_unit_id": "R-Recon-1", "action_type": "Retreat", "details": "Falling back under fire.", "outcome": "Retreating"}
+      ],
       "unit_positions": [
         {"unit_id": "B-Inf-1", "side": "Blue", "type": "Infantry", "x": 3, "y": 2, "health": 95, "range": 3, "status": "Engaged"},
         {"unit_id": "B-Inf-2", "side": "Blue", "type": "Infantry", "x": 3, "y": 4, "health": 100, "range": 3, "status": "Alert"},

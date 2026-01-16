@@ -189,6 +189,25 @@ if st.session_state.current_scenario:
             st.subheader("Situation Brief")
             st.info(current_frame.frame_description)
             
+            # --- Combat Log ---
+            if hasattr(current_frame, 'combat_log') and current_frame.combat_log:
+                with st.expander("📜 Combat Log / Events", expanded=True):
+                    for event in current_frame.combat_log:
+                        # Icon Mapping
+                        icon = "⚔️"
+                        if event.action_type == "Move": icon = "🦶"
+                        elif event.action_type == "Fire": icon = "🔥"
+                        elif event.action_type == "Retreat": icon = "🏳️"
+                        elif event.action_type == "Intel": icon = "📡"
+                        
+                        st.markdown(
+                            f"**{icon} {event.source_unit_id}** "
+                            f"_{event.action_type}_ -> "
+                            f"**{event.target_unit_id or ''}** "
+                            f": {event.details} "
+                            f"**{f'[{event.outcome}]' if event.outcome else ''}**"
+                        )
+            
             st.subheader("Controls")
             c1, c2, c3 = st.columns([1, 1, 2])
             

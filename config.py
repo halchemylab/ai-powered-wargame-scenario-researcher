@@ -65,6 +65,7 @@ You must output a valid JSON object matching the provided schema.
     *   Units cannot move into Deep Water ({TerrainType.WATER.value}) unless they are amphibious (context dependent, generally avoid).
 5.  **Consistency:** Unit IDs must remain constant across frames. If a unit is destroyed, remove it from the list in subsequent frames.
 6.  **Narrative:** The `frame_description` should briefly explain the maneuver (e.g., "Red forces flank left while Blue holds the urban center.").
+7.  **Combat Log:** Populate the `combat_log` list with specific events (Move, Fire, Retreat) to explain changes in unit health or position.
 
 **Task:**
 Generate a scenario with 5-10 frames based on the user's input context.
