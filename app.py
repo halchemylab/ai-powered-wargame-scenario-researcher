@@ -96,10 +96,24 @@ with st.container():
     col_input, col_opt = st.columns([3, 1])
     
     with col_input:
+        # Quick-Start Templates
+        def set_template(text):
+            st.session_state.scenario_input = text
+            
+        st.write(" **Quick Start Templates:**")
+        t1, t2, t3 = st.columns(3)
+        with t1: 
+            st.button("🏙️ Urban Defense", on_click=set_template, args=("Urban warfare in a dense city center. Blue team defending key intersections against Red armored advance.",), use_container_width=True)
+        with t2:
+            st.button("🌉 River Crossing", on_click=set_template, args=("Red forces attempting a pontoon crossing under fire from Blue artillery in open terrain.",), use_container_width=True)
+        with t3:
+            st.button("🌲 Forest Ambush", on_click=set_template, args=("Meeting engagement in dense forest. Recon units clashing in low visibility conditions.",), use_container_width=True)
+
         context_input = st.text_area(
             "Scenario Context / Research Topic",
             placeholder="E.g., Recent skirmishes in the Avdiivka sector...",
-            height=100
+            height=100,
+            key="scenario_input"
         )
     
     with col_opt:
