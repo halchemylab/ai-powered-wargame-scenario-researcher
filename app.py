@@ -209,16 +209,30 @@ if st.session_state.current_scenario:
                         )
             
             st.subheader("Controls")
-            c1, c2, c3 = st.columns([1, 1, 2])
             
-            with c1:
-                if st.button("◀ Prev"):
-                    state_manager.prev_frame()
+            # Interactive Timeline Slider
+            def update_timeline():
+                st.session_state.current_frame_index = st.session_state.timeline_slider
+
+            st.slider(
+                "Timeline Navigation",
+                min_value=0,
+                max_value=total_frames - 1,
+                value=current_idx,
+                key="timeline_slider",
+                on_change=update_timeline,
+                help="Drag to jump to any point in the simulation."
+            )
+            
+            # Playback Controls (Optional simplified version)
+            pc1, pc2, pc3 = st.columns([1, 1, 2])
+            with pc1:
+                if st.button("⏪ Start"):
+                    st.session_state.current_frame_index = 0
                     st.rerun()
-                    
-            with c2:
-                if st.button("Next ▶"):
-                    state_manager.next_frame()
+            with pc2:
+                if st.button("End ⏩"):
+                    st.session_state.current_frame_index = total_frames - 1
                     st.rerun()
             
             st.markdown("---")
