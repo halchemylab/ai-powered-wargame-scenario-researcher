@@ -183,7 +183,16 @@ if st.session_state.current_scenario:
                     scenario.terrain_map, 
                     current_frame.unit_positions
                 )
-            st.plotly_chart(fig, use_container_width=True)
+            
+            # Enable selection events to capture clicks
+            map_event = st.plotly_chart(fig, use_container_width=True, on_select="rerun", selection_mode="points", key="tactical_map_chart")
+            
+            # Process selection if user clicked the map
+            if map_event and "selection" in map_event and map_event["selection"]["points"]:
+                clicked_point = map_event["selection"]["points"][0]
+                # Update the editor's target coordinates
+                st.session_state["editor_x"] = int(clicked_point["x"])
+                st.session_state["editor_y"] = int(clicked_point["y"])
             
         with col_info:
             st.subheader("Situation Brief")
@@ -242,11 +251,15 @@ if st.session_state.current_scenario:
                 st.caption(f"Edit Frame {current_idx + 1} at (X, Y)")
                 
                 # 1. Coordinate Selection
+                # Initialize selection state if needed
+                if "editor_x" not in st.session_state: st.session_state.editor_x = 0
+                if "editor_y" not in st.session_state: st.session_state.editor_y = 0
+
                 ec1, ec2 = st.columns(2)
                 with ec1:
-                    edit_x = st.number_input("Grid X", 0, len(scenario.terrain_map[0])-1, 0)
+                    edit_x = st.number_input("Grid X", 0, len(scenario.terrain_map[0])-1, key="editor_x")
                 with ec2:
-                    edit_y = st.number_input("Grid Y", 0, len(scenario.terrain_map)-1, 0)
+                    edit_y = st.number_input("Grid Y", 0, len(scenario.terrain_map)-1, key="editor_y")
                 
                 # Context at Coords
                 found_unit = next((u for u in current_frame.unit_positions if u.x == edit_x and u.y == edit_y), None)
