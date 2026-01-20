@@ -207,9 +207,34 @@ if st.session_state.current_scenario:
             # Process selection if user clicked the map
             if map_event and "selection" in map_event and map_event["selection"]["points"]:
                 clicked_point = map_event["selection"]["points"][0]
-                # Update the editor's target coordinates
-                st.session_state["editor_x"] = int(clicked_point["x"])
-                st.session_state["editor_y"] = int(clicked_point["y"])
+                new_x = int(clicked_point["x"])
+                new_y = int(clicked_point["y"])
+                
+                # Check if changed
+                if new_x != st.session_state.get("editor_x") or new_y != st.session_state.get("editor_y"):
+                    st.session_state["editor_x"] = new_x
+                    st.session_state["editor_y"] = new_y
+                    
+                    # Pre-fill Unit Editor
+                    found = next((u for u in current_frame.unit_positions if u.x == new_x and u.y == new_y), None)
+                    if found:
+                        st.session_state["u_id_input"] = found.unit_id
+                        st.session_state["u_status_input"] = found.status
+                        st.session_state["u_side_idx_input"] = 0 if found.side == config.UnitSide.BLUE else 1
+                        
+                        types = ["Infantry", "Tank", "Mechanized", "Recon", "Artillery", "HQ"]
+                        try:
+                            st.session_state["u_type_idx_input"] = types.index(found.type) 
+                        except ValueError:
+                            st.session_state["u_type_idx_input"] = 0
+                    else:
+                        # Reset
+                        st.session_state["u_id_input"] = f"Unit-{new_x}-{new_y}"
+                        st.session_state["u_status_input"] = "Active"
+                        st.session_state["u_side_idx_input"] = 0
+                        st.session_state["u_type_idx_input"] = 0
+                    
+                    st.rerun()
             
         with col_info:
             st.subheader("Situation Brief")
@@ -315,14 +340,23 @@ if st.session_state.current_scenario:
                     st.info(f"Present: {found_unit.side.value} {found_unit.type} ({found_unit.unit_id})")
                 else:
                     st.caption("No unit at this location.")
+                
+                # Init State if not present
+                if "u_side_idx_input" not in st.session_state: st.session_state.u_side_idx_input = 0
+                if "u_type_idx_input" not in st.session_state: st.session_state.u_type_idx_input = 0
+                if "u_id_input" not in st.session_state: st.session_state.u_id_input = "New-Unit"
+                if "u_status_input" not in st.session_state: st.session_state.u_status_input = "Active"
 
                 uc1, uc2 = st.columns(2)
                 with uc1:
-                    u_side = st.selectbox("Side", ["Blue", "Red"], index=0 if not found_unit or found_unit.side == config.UnitSide.BLUE else 1)
-                    u_type = st.selectbox("Type", ["Infantry", "Tank", "Mechanized", "Recon", "Artillery", "HQ"], index=0)
+                    u_side = st.selectbox("Side", ["Blue", "Red"], key="u_side_idx_input")
+                    u_type = st.selectbox("Type", ["Infantry", "Tank", "Mechanized", "Recon", "Artillery", "HQ"], key="u_type_idx_input")
                 with uc2:
-                    u_id = st.text_input("Unit ID", value=found_unit.unit_id if found_unit else "New-Unit-01")
-                    u_status = st.text_input("Status", value=found_unit.status if found_unit else "Deployed")
+                    u_id = st.text_input("Unit ID", key="u_id_input")
+                    u_status = st.text_input("Status", key="u_status_input")
+                
+                # Update logic requires reading from the WIDGET keys or State?
+                # st.session_state["u_id_input"] holds the current value.
                 
                 uc3, uc4 = st.columns(2)
                 with uc3:
@@ -332,14 +366,14 @@ if st.session_state.current_scenario:
                             current_frame.unit_positions.remove(found_unit)
                         
                         new_unit = ai_handler.Unit(
-                            unit_id=u_id,
-                            side=config.UnitSide(u_side),
+                            unit_id=st.session_state.u_id_input,
+                            side=config.UnitSide(u_side), # Read from variable bound to selectbox
                             type=u_type,
                             x=edit_x,
                             y=edit_y,
                             health=found_unit.health if found_unit else 100,
                             range=found_unit.range if found_unit else 3,
-                            status=u_status
+                            status=st.session_state.u_status_input
                         )
                         current_frame.unit_positions.append(new_unit)
                         st.rerun()
