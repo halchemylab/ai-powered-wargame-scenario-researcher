@@ -4,7 +4,7 @@ import time
 import json
 import config
 from dotenv import load_dotenv
-from engine import ai_handler, map_renderer, analytics
+from engine import ai_handler, map_renderer, analytics, validator
 from utils import state_manager, exporter
 
 # Load environment variables
@@ -144,6 +144,9 @@ with st.container():
                         terrain_type=terrain_type
                     )
                     
+                    # Validate
+                    validator.validate_scenario(scenario)
+                    
                     # Update State
                     state_manager.set_scenario(scenario)
                     st.success("Simulation generated successfully!")
@@ -211,6 +214,11 @@ if st.session_state.current_scenario:
         with col_info:
             st.subheader("Situation Brief")
             st.info(current_frame.frame_description)
+            
+            # --- Validation Alerts ---
+            if hasattr(current_frame, 'validation_errors') and current_frame.validation_errors:
+                for err in current_frame.validation_errors:
+                    st.error(f"⚠️ Logic Violation: {err}")
             
             # --- Combat Log ---
             if hasattr(current_frame, 'combat_log') and current_frame.combat_log:
@@ -368,6 +376,10 @@ if st.session_state.current_scenario:
                                 
                                 # 3. Append
                                 scenario.frames.extend(new_frames)
+                                
+                                # Validate Full Scenario
+                                validator.validate_scenario(scenario)
+
                                 st.session_state.total_frames_generated += len(new_frames)
                                 st.success(f"Branch created! Added {len(new_frames)} new frames.")
                                 time.sleep(1)
