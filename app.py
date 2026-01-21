@@ -285,8 +285,8 @@ if st.session_state.current_scenario:
                 help="Drag to jump to any point in the simulation."
             )
             
-            # Playback Controls (Optional simplified version)
-            pc1, pc2, pc3 = st.columns([1, 1, 2])
+            # Playback Controls
+            pc1, pc2, pc3, pc4 = st.columns([1, 1, 1, 1])
             with pc1:
                 if st.button("⏪ Start"):
                     st.session_state.current_frame_index = 0
@@ -295,6 +295,23 @@ if st.session_state.current_scenario:
                 if st.button("End ⏩"):
                     st.session_state.current_frame_index = total_frames - 1
                     st.rerun()
+            with pc3:
+                if st.button("▶️ Play"):
+                    st.session_state.is_playing = True
+                    st.rerun()
+            with pc4:
+                if st.button("⏹️ Stop"):
+                    st.session_state.is_playing = False
+                    st.rerun()
+            
+            # Auto-Play Logic
+            if st.session_state.get("is_playing", False):
+                if current_idx < total_frames - 1:
+                    time.sleep(1.5) # Pace the playback
+                    st.session_state.current_frame_index += 1
+                    st.rerun()
+                else:
+                    st.session_state.is_playing = False # Stop at end
             
             st.markdown("---")
 
