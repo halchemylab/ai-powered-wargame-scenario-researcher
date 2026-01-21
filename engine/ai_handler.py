@@ -6,6 +6,18 @@ import os
 import json
 import config
 from duckduckgo_search import DDGS
+from engine import validator
+
+# --- Data Models ---
+# ... (rest of imports/models unchanged) ...
+
+# Keep the models as they are, I will use "old_string" to match the imports and then `fetch_scenario`.
+# Actually, I'll just replace the `fetch_scenario` function and the import section.
+# But replacing two separate blocks is hard with one call if they are far apart.
+# I will do it in two steps or just rewrite the file imports + fetch_scenario if I can match a large chunk.
+# The file is small enough.
+# Let's try to match the imports first.
+
 
 # --- Data Models ---
 
@@ -147,26 +159,63 @@ def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o", use_search
         Based on the intelligence above, reconstruct the tactical situation.
         """
 
-    try:
-        completion = client.beta.chat.completions.parse(
-            model=model,
-            messages=[
-                {"role": "system", "content": config.SYSTEM_PROMPT},
-                {"role": "user", "content": f"Generate a tactical scenario ({map_size}x{map_size} grid, {terrain_type} terrain) based on this research topic: {final_context}"},
-            ],
-            response_format=WargameScenario,
-        )
-        
-        scenario = completion.choices[0].message.parsed
-        return scenario
+    messages = [
+        {"role": "system", "content": config.SYSTEM_PROMPT},
+        {"role": "user", "content": f"Generate a tactical scenario ({map_size}x{map_size} grid, {terrain_type} terrain) based on this research topic: {final_context}"},
+    ]
 
-    except AuthenticationError:
-        raise ValueError("Invalid OpenAI API Key. Please check your credentials.")
-    except RateLimitError:
-        raise RuntimeError("OpenAI API rate limit exceeded. Please try again later.")
-    except APIConnectionError:
-        raise RuntimeError("Failed to connect to OpenAI API. Please check your internet connection.")
-    except APIError as e:
-        raise RuntimeError(f"OpenAI API returned an error: {str(e)}")
-    except Exception as e:
-        raise RuntimeError(f"An unexpected error occurred during scenario generation: {str(e)}")
+    max_retries = 3
+    
+    for attempt in range(max_retries + 1):
+        try:
+            completion = client.beta.chat.completions.parse(
+                model=model,
+                messages=messages,
+                response_format=WargameScenario,
+            )
+            
+            scenario = completion.choices[0].message.parsed
+            
+            # Validate
+            validator.validate_scenario(scenario)
+            
+            # Collect errors
+            all_errors = []
+            for i, frame in enumerate(scenario.frames):
+                if frame.validation_errors:
+                    for err in frame.validation_errors:
+                        all_errors.append(f"Frame {i+1}: {err}")
+            
+            # If valid, return
+            if not all_errors:
+                return scenario
+            
+            # If errors and retries remain, loop
+            if attempt < max_retries:
+                error_feedback = "The generated scenario contains logic/physics violations. Please fix the following errors and regenerate:\n" + "\n".join(all_errors[:10]) # Limit feedback length
+                
+                # Update history
+                # We need to simulate the assistant's response to keep the conversation chain valid
+                messages.append({"role": "assistant", "content": scenario.model_dump_json()})
+                messages.append({"role": "user", "content": error_feedback})
+                
+                # Optional: Log to console if visible
+                print(f"Validation failed (Attempt {attempt+1}/{max_retries+1}). Retrying...")
+            else:
+                # Last attempt failed, return anyway but errors are stamped on frames
+                return scenario
+
+        except AuthenticationError:
+            raise ValueError("Invalid OpenAI API Key. Please check your credentials.")
+        except RateLimitError:
+            raise RuntimeError("OpenAI API rate limit exceeded. Please try again later.")
+        except APIConnectionError:
+            raise RuntimeError("Failed to connect to OpenAI API. Please check your internet connection.")
+        except APIError as e:
+            raise RuntimeError(f"OpenAI API returned an error: {str(e)}")
+        except Exception as e:
+            # If it's the last attempt, raise
+            if attempt == max_retries:
+                raise RuntimeError(f"An unexpected error occurred during scenario generation: {str(e)}")
+    
+    return scenario # Should be unreachable due to return/raise in loop, but for safety
