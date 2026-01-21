@@ -121,7 +121,7 @@ def render_map_on_mapbox(terrain_map, units, center_lat, center_lon):
     
     return fig
 
-def render_map(terrain_map, units):
+def render_map(terrain_map, units, previous_units=None):
     """
     Generates a Plotly figure for the tactical map.
     
@@ -129,6 +129,7 @@ def render_map(terrain_map, units):
         terrain_map (list of list of int): N x M grid.
         units (list of objects): List of units for the current frame. 
                                  Expected attrs: unit_id, side, x, y, type.
+        previous_units (list of objects, optional): List of units from the previous frame.
     
     Returns:
         go.Figure: The Plotly figure object.
@@ -150,6 +151,33 @@ def render_map(terrain_map, units):
         zmax=config.TerrainType.FOREST.value,
         hoverinfo='skip' # Disable hover on terrain for cleaner look
     ))
+
+    # 1.5. Movement Vectors (Arrows)
+    if previous_units and units:
+        prev_map = {u.unit_id: u for u in previous_units}
+        
+        for unit in units:
+            if unit.unit_id in prev_map:
+                prev = prev_map[unit.unit_id]
+                # Check if moved
+                if prev.x != unit.x or prev.y != unit.y:
+                    # Add arrow
+                    fig.add_annotation(
+                        x=unit.x,
+                        y=unit.y,
+                        ax=prev.x,
+                        ay=prev.y,
+                        xref="x",
+                        yref="y",
+                        axref="x",
+                        ayref="y",
+                        showarrow=True,
+                        arrowhead=2,
+                        arrowsize=1,
+                        arrowwidth=2,
+                        arrowcolor="white",
+                        opacity=0.6
+                    )
 
     # 2. Overlay: Units
     if units:

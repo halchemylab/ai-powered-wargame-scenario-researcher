@@ -196,9 +196,14 @@ if st.session_state.current_scenario:
                     coords[1]
                 )
             else:
+                prev_units = None
+                if current_idx > 0:
+                    prev_units = scenario.frames[current_idx-1].unit_positions
+
                 fig = map_renderer.render_map(
                     scenario.terrain_map, 
-                    current_frame.unit_positions
+                    current_frame.unit_positions,
+                    previous_units=prev_units
                 )
             
             # Enable selection events to capture clicks
