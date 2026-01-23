@@ -179,6 +179,13 @@ if st.session_state.current_scenario:
         with col_map:
             st.subheader(f"Tactical Map - Frame {current_idx + 1}/{total_frames}")
             
+            # View Controls
+            vc1, vc2 = st.columns(2)
+            with vc1:
+                show_arrows = st.checkbox("Show Movement Arrows", value=True)
+            with vc2:
+                show_labels = st.checkbox("Show Unit Labels", value=True)
+            
             # Geo-Coding Logic
             coords = None
             if geo_location and not use_mock:
@@ -207,12 +214,24 @@ if st.session_state.current_scenario:
                 fig = map_renderer.render_map(
                     scenario.terrain_map, 
                     current_frame.unit_positions,
-                    previous_units=prev_units
+                    previous_units=prev_units,
+                    show_arrows=show_arrows,
+                    show_labels=show_labels
                 )
             
             # Enable selection events to capture clicks
             map_event = st.plotly_chart(fig, use_container_width=True, on_select="rerun", selection_mode="points", key="tactical_map_chart")
             
+            # Legend
+            with st.expander("🗺️ Map Legend", expanded=True):
+                lg1, lg2, lg3, lg4 = st.columns(4)
+                with lg1: st.markdown(f"**Open**<br><span style='color:#d2b48c'>████</span>", unsafe_allow_html=True)
+                with lg2: st.markdown(f"**Water**<br><span style='color:#4682b4'>████</span>", unsafe_allow_html=True)
+                with lg3: st.markdown(f"**Urban**<br><span style='color:#696969'>████</span>", unsafe_allow_html=True)
+                with lg4: st.markdown(f"**Forest**<br><span style='color:#228b22'>████</span>", unsafe_allow_html=True)
+                
+                st.caption("Units: 🔵 Blue Team vs 🔴 Red Team | Icons: 🛡️Tank 💂Inf 👁️Recon 🎯Arty")
+
             # Process selection if user clicked the map
             if map_event and "selection" in map_event and map_event["selection"]["points"]:
                 clicked_point = map_event["selection"]["points"][0]

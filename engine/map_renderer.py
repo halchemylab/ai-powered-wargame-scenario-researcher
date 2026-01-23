@@ -121,7 +121,7 @@ def render_map_on_mapbox(terrain_map, units, center_lat, center_lon):
     
     return fig
 
-def render_map(terrain_map, units, previous_units=None):
+def render_map(terrain_map, units, previous_units=None, show_arrows=True, show_labels=True):
     """
     Generates a Plotly figure for the tactical map.
     
@@ -130,6 +130,8 @@ def render_map(terrain_map, units, previous_units=None):
         units (list of objects): List of units for the current frame. 
                                  Expected attrs: unit_id, side, x, y, type.
         previous_units (list of objects, optional): List of units from the previous frame.
+        show_arrows (bool): Whether to show movement vectors.
+        show_labels (bool): Whether to show unit icons/text.
     
     Returns:
         go.Figure: The Plotly figure object.
@@ -153,7 +155,7 @@ def render_map(terrain_map, units, previous_units=None):
     ))
 
     # 1.5. Movement Vectors (Arrows)
-    if previous_units and units:
+    if show_arrows and previous_units and units:
         prev_map = {u.unit_id: u for u in previous_units}
         
         for unit in units:
@@ -226,11 +228,12 @@ def render_map(terrain_map, units, previous_units=None):
             )
             hover_texts.append(tooltip)
 
+        mode_settings = 'markers+text' if show_labels else 'markers'
 
         fig.add_trace(go.Scatter(
             x=x_vals,
             y=y_vals,
-            mode='markers+text',
+            mode=mode_settings,
             text=texts,
             textfont=dict(size=20, color='black'), # Black icons for contrast
             marker=dict(
