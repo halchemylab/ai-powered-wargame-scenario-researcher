@@ -42,6 +42,16 @@ UNIT_ICONS = {
     "default": "⏺️"
 }
 
+# --- Doctrines ---
+DOCTRINES = {
+    "Generic": "Standard balanced tactics.",
+    "NATO Combined Arms": "Prioritize air superiority, precision strikes, and maneuver warfare. Units rely on mutual support. High value on survivability.",
+    "Soviet/Russian Deep Battle": "Prioritize massed artillery, echeloned armored attacks, and breakthrough operations. Willingness to accept casualties for momentum.",
+    "Asymmetric/Insurgency": "Prioritize ambushes, urban cover, IEDs, and hit-and-run attacks. Avoid direct confrontation with superior armor.",
+    "Static Defense": "Prioritize digging in, minefields, and holding key terrain at all costs. Limited counter-attacks.",
+    "Human Wave / Mass Assault": "Overwhelm enemy positions with superior numbers, accepting high losses to close distance."
+}
+
 # --- AI Configuration (AI Handler) ---
 
 SYSTEM_PROMPT = f"""

@@ -112,7 +112,9 @@ def fetch_scenario(
     use_mock: bool = False, 
     map_size: int = 20, 
     terrain_type: str = "Balanced",
-    geo_location: str = None
+    geo_location: str = None,
+    blue_doctrine: str = "Generic",
+    red_doctrine: str = "Generic"
 ) -> WargameScenario:
     """
     Calls OpenAI API to generate a wargame scenario. 
@@ -174,7 +176,21 @@ def fetch_scenario(
         """
 
     # 3. Prompt Construction
-    system_prompt = config.SYSTEM_PROMPT
+    
+    # Doctrine Injection
+    b_doc_desc = config.DOCTRINES.get(blue_doctrine, config.DOCTRINES["Generic"])
+    r_doc_desc = config.DOCTRINES.get(red_doctrine, config.DOCTRINES["Generic"])
+    
+    doctrine_instruction = f"""
+    STRATEGIC DOCTRINE:
+    - BLUE FORCE ({blue_doctrine}): {b_doc_desc}
+    - RED FORCE ({red_doctrine}): {r_doc_desc}
+    
+    You MUST simulate unit behaviors consistent with these doctrines. 
+    (e.g., if 'Deep Battle', Red should mass artillery; if 'Asymmetric', Blue should ambush).
+    """
+
+    system_prompt = config.SYSTEM_PROMPT + "\n" + doctrine_instruction
     user_prompt = f"Generate a tactical scenario ({map_size}x{map_size} grid) based on this research topic: {final_context}"
     
     if real_terrain:

@@ -79,6 +79,11 @@ with st.sidebar:
     st.markdown("#### 🌍 Geospatial Overlay")
     geo_location = st.text_input("Real-World Location", placeholder="e.g., Avdiivka, Ukraine", help="Enter a city or region to overlay the grid on a real map.")
     
+    # Doctrine Configuration
+    st.markdown("#### 📜 Strategic Doctrines")
+    blue_doctrine = st.selectbox("Blue Force Doctrine", list(config.DOCTRINES.keys()), index=0)
+    red_doctrine = st.selectbox("Red Force Doctrine", list(config.DOCTRINES.keys()), index=0)
+
     use_mock = st.checkbox(
         "Enable Offline / Mock Mode",
         value=False,
@@ -142,7 +147,9 @@ with st.container():
                         use_mock=use_mock,
                         map_size=map_size,
                         terrain_type=terrain_type,
-                        geo_location=geo_location if geo_location else None
+                        geo_location=geo_location if geo_location else None,
+                        blue_doctrine=blue_doctrine,
+                        red_doctrine=red_doctrine
                     )
                     
                     # Validate
