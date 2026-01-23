@@ -154,14 +154,23 @@ def fetch_scenario(
 
     # 2. Search Integration
     if use_search:
-        intel = search_realtime_intel(context)
+        intel_general = search_realtime_intel(context)
+        intel_orbat = search_realtime_intel(f"military order of battle unit composition {context}")
+        
         final_context = f"""
         User Query: {context}
         
-        LATEST INTELLIGENCE (Real-Time Search):
-        {intel}
+        LATEST INTELLIGENCE (General):
+        {intel_general}
         
-        Based on the intelligence above, reconstruct the tactical situation.
+        ORDER OF BATTLE DATA (Specific Units):
+        {intel_orbat}
+        
+        MANDATORY FORCE COMPOSITION:
+        Use the 'ORDER OF BATTLE DATA' to populate the unit list.
+        - Do NOT use generic names like 'Red Tank' if specific data (e.g., '90th Guards Tank Div') is available.
+        - Mimic the actual equipment types (e.g., 'T-72B3', 'M1A2 Sepv3') found in the search results.
+        - Balance the force ratios according to the report.
         """
 
     # 3. Prompt Construction
