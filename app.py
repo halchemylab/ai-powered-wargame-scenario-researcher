@@ -166,7 +166,11 @@ if st.session_state.current_scenario:
     # Get current frame data
     current_frame = scenario.frames[current_idx]
     
-    tab_sim, tab_anl = st.tabs(["Tactical View", "Analytics & AAR"])
+    # Initialize Chat History
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+    
+    tab_sim, tab_anl, tab_chat = st.tabs(["Tactical View", "Analytics & AAR", "Commander's Chat"])
     
     with tab_sim:
         # Layout: Map on Left, Info on Right
@@ -502,6 +506,37 @@ if st.session_state.current_scenario:
             fig_heat = map_renderer.render_accumulated_heatmap(heatmap_data)
             st.plotly_chart(fig_heat, use_container_width=True)
             st.caption("Accumulated unit presence per grid sector.")
+    
+    with tab_chat:
+        st.header("💬 Commander's Assistant")
+        st.caption("Ask questions about the current tactical situation, unit orders, or potential risks.")
+        
+        # Display Chat History
+        for message in st.session_state.chat_history:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+
+        # Input
+        if prompt := st.chat_input("Ask the Commander..."):
+            # Add user message
+            st.session_state.chat_history.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
+
+            # Generate Response
+            with st.chat_message("assistant"):
+                with st.spinner("Analyzing tactical data..."):
+                    response = ai_handler.ask_commander(
+                        api_key, 
+                        scenario, 
+                        current_idx, 
+                        prompt, 
+                        model=model_name
+                    )
+                    st.markdown(response)
+            
+            # Save assistant message
+            st.session_state.chat_history.append({"role": "assistant", "content": response})
         
 else:
     st.info("Enter a context above and click 'Generate Simulation' to begin.")

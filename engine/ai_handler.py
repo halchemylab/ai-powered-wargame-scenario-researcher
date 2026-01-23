@@ -219,3 +219,38 @@ def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o", use_search
                 raise RuntimeError(f"An unexpected error occurred during scenario generation: {str(e)}")
     
     return scenario # Should be unreachable due to return/raise in loop, but for safety
+
+def ask_commander(api_key: str, scenario: WargameScenario, current_frame_idx: int, question: str, model: str = "gpt-4o") -> str:
+    """
+    Answers a user's question about the current scenario frame using AI context.
+    """
+    if not api_key:
+        return "⚠️ Please provide an API key in the sidebar to use the Commander's Assistant."
+    
+    try:
+        client = openai.Client(api_key=api_key)
+        
+        frame = scenario.frames[current_frame_idx]
+        
+        # Prepare context
+        context_str = f"""
+        **Tactical Situation (Frame {current_frame_idx + 1}):**
+        - Description: {frame.frame_description}
+        - Units: {json.dumps([u.model_dump() for u in frame.unit_positions])}
+        - Terrain Map (Summary): {len(scenario.terrain_map)}x{len(scenario.terrain_map[0])} Grid.
+        """
+        
+        messages = [
+            {"role": "system", "content": "You are a tactical commander assistant. Answer questions about the current wargame situation concisely, explaining unit maneuvers and strategic risks based on the provided unit data and description. Do not make up facts not present in the data."},
+            {"role": "user", "content": f"Context:\n{context_str}\n\nQuestion: {question}"}
+        ]
+        
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            max_tokens=300
+        )
+        
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"Error consulting commander: {str(e)}"
