@@ -6,18 +6,7 @@ import os
 import json
 import config
 from duckduckgo_search import DDGS
-from engine import validator
-
-# --- Data Models ---
-# ... (rest of imports/models unchanged) ...
-
-# Keep the models as they are, I will use "old_string" to match the imports and then `fetch_scenario`.
-# Actually, I'll just replace the `fetch_scenario` function and the import section.
-# But replacing two separate blocks is hard with one call if they are far apart.
-# I will do it in two steps or just rewrite the file imports + fetch_scenario if I can match a large chunk.
-# The file is small enough.
-# Let's try to match the imports first.
-
+from engine import validator, terrain_generator
 
 # --- Data Models ---
 
@@ -83,9 +72,6 @@ def continue_scenario(api_key: str, current_scenario: WargameScenario, current_f
     # Prepare context
     last_frame = current_scenario.frames[current_frame_idx]
     
-    # Serialize terrain and units for the prompt
-    # Simplified terrain representation to save tokens/complexity if needed, but 20x20 is small enough.
-    
     prompt = f"""
     **Mission Update:**
     The user has intervened or requested a branch from Frame {current_frame_idx + 1}.
@@ -118,10 +104,19 @@ def continue_scenario(api_key: str, current_scenario: WargameScenario, current_f
     except Exception as e:
         raise RuntimeError(f"Error extending scenario: {str(e)}")
 
-def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o", use_search: bool = False, use_mock: bool = False, map_size: int = 20, terrain_type: str = "Balanced") -> WargameScenario:
+def fetch_scenario(
+    api_key: str, 
+    context: str, 
+    model: str = "gpt-4o", 
+    use_search: bool = False, 
+    use_mock: bool = False, 
+    map_size: int = 20, 
+    terrain_type: str = "Balanced",
+    geo_location: str = None
+) -> WargameScenario:
     """
     Calls OpenAI API to generate a wargame scenario. 
-    Optionally augments context with web search.
+    Optionally augments context with web search and real-world terrain.
     """
     if use_mock:
         try:
@@ -147,7 +142,17 @@ def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o", use_search
     client = openai.Client(api_key=api_key)
     
     final_context = context
+    real_terrain = None
 
+    # 1. Real-World Terrain Fetching
+    if geo_location:
+        try:
+            real_terrain = terrain_generator.fetch_terrain_map(geo_location, grid_size=map_size)
+        except Exception as e:
+            print(f"Failed to generate real terrain: {e}")
+            # Continue without it, or maybe append a warning to context
+
+    # 2. Search Integration
     if use_search:
         intel = search_realtime_intel(context)
         final_context = f"""
@@ -159,9 +164,21 @@ def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o", use_search
         Based on the intelligence above, reconstruct the tactical situation.
         """
 
+    # 3. Prompt Construction
+    system_prompt = config.SYSTEM_PROMPT
+    user_prompt = f"Generate a tactical scenario ({map_size}x{map_size} grid) based on this research topic: {final_context}"
+    
+    if real_terrain:
+        # Flatten for token efficiency or just dump
+        terrain_str = json.dumps(real_terrain)
+        user_prompt += f"\n\nIMPORTANT: You MUST use the following pre-generated terrain map (0=Open, 1=Water, 2=Urban, 3=Forest). Place units logically within this specific terrain:\n{terrain_str}"
+        system_prompt += "\nCONSTRAINT: The user has provided a fixed terrain map. You must return this exact terrain map in your response. Focus on placing units and generating tactics."
+    else:
+        user_prompt += f"\nTerrain Style: {terrain_type}"
+
     messages = [
-        {"role": "system", "content": config.SYSTEM_PROMPT},
-        {"role": "user", "content": f"Generate a tactical scenario ({map_size}x{map_size} grid, {terrain_type} terrain) based on this research topic: {final_context}"},
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
     ]
 
     max_retries = 3
@@ -175,6 +192,10 @@ def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o", use_search
             )
             
             scenario = completion.choices[0].message.parsed
+            
+            # 4. Enforce Real Terrain (Override AI Hallucination)
+            if real_terrain:
+                scenario.terrain_map = real_terrain
             
             # Validate
             validator.validate_scenario(scenario)
@@ -195,7 +216,6 @@ def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o", use_search
                 error_feedback = "The generated scenario contains logic/physics violations. Please fix the following errors and regenerate:\n" + "\n".join(all_errors[:10]) # Limit feedback length
                 
                 # Update history
-                # We need to simulate the assistant's response to keep the conversation chain valid
                 messages.append({"role": "assistant", "content": scenario.model_dump_json()})
                 messages.append({"role": "user", "content": error_feedback})
                 
@@ -218,39 +238,4 @@ def fetch_scenario(api_key: str, context: str, model: str = "gpt-4o", use_search
             if attempt == max_retries:
                 raise RuntimeError(f"An unexpected error occurred during scenario generation: {str(e)}")
     
-    return scenario # Should be unreachable due to return/raise in loop, but for safety
-
-def ask_commander(api_key: str, scenario: WargameScenario, current_frame_idx: int, question: str, model: str = "gpt-4o") -> str:
-    """
-    Answers a user's question about the current scenario frame using AI context.
-    """
-    if not api_key:
-        return "⚠️ Please provide an API key in the sidebar to use the Commander's Assistant."
-    
-    try:
-        client = openai.Client(api_key=api_key)
-        
-        frame = scenario.frames[current_frame_idx]
-        
-        # Prepare context
-        context_str = f"""
-        **Tactical Situation (Frame {current_frame_idx + 1}):**
-        - Description: {frame.frame_description}
-        - Units: {json.dumps([u.model_dump() for u in frame.unit_positions])}
-        - Terrain Map (Summary): {len(scenario.terrain_map)}x{len(scenario.terrain_map[0])} Grid.
-        """
-        
-        messages = [
-            {"role": "system", "content": "You are a tactical commander assistant. Answer questions about the current wargame situation concisely, explaining unit maneuvers and strategic risks based on the provided unit data and description. Do not make up facts not present in the data."},
-            {"role": "user", "content": f"Context:\n{context_str}\n\nQuestion: {question}"}
-        ]
-        
-        response = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            max_tokens=300
-        )
-        
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"Error consulting commander: {str(e)}"
+    return scenario

@@ -141,7 +141,8 @@ with st.container():
                         use_search=use_search,
                         use_mock=use_mock,
                         map_size=map_size,
-                        terrain_type=terrain_type
+                        terrain_type=terrain_type,
+                        geo_location=geo_location if geo_location else None
                     )
                     
                     # Validate

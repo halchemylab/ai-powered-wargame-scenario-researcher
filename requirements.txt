@@ -8,3 +8,5 @@ duckduckgo-search
 pytest
 fpdf2
 geopy
+overpy
+numpy
