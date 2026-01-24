@@ -1,44 +1,18 @@
-from pydantic import BaseModel, Field
-from typing import List, Literal, Optional
+from typing import List, Optional
 import openai
 from openai import AuthenticationError, RateLimitError, APIConnectionError, APIError
 import os
 import json
 import config
 from duckduckgo_search import DDGS
-from engine import validator, terrain_generator
+from engine import validator, terrain_generator, models
 
-# --- Data Models ---
-
-class Unit(BaseModel):
-    unit_id: str = Field(..., description="Unique identifier for the unit (e.g., 'A-1', 'B-Tank').")
-    side: config.UnitSide = Field(..., description="The side the unit belongs to.")
-    type: str = Field(..., description="Type of unit (e.g., Infantry, Tank, Artillery).")
-    x: int = Field(..., ge=0, description="X coordinate on the grid.")
-    y: int = Field(..., ge=0, description="Y coordinate on the grid.")
-    health: int = Field(100, ge=0, le=100, description="Unit health percentage.")
-    range: int = Field(1, ge=1, description="Effective firing range in grid cells.")
-    status: str = Field("Active", description="Current tactical status (e.g., 'Moving', 'Engaged', 'Digging In').")
-
-class CombatEvent(BaseModel):
-    source_unit_id: str = Field(..., description="ID of the unit initiating the action.")
-    target_unit_id: Optional[str] = Field(None, description="ID of the target unit, if applicable.")
-    action_type: Literal["Move", "Fire", "Suppression", "Retreat", "Reinforce", "Intel"] = Field(..., description="Type of combat event.")
-    details: str = Field(..., description="Short description of the event (e.g. 'Fired 120mm shell', 'Moved to Grid (4,5)').")
-    outcome: Optional[str] = Field(None, description="Result of the action (e.g., 'Target Hit (15 dmg)', 'Missed').")
-
-class Frame(BaseModel):
-    frame_description: str = Field(..., description="Narrative description of the tactical situation in this time step.")
-    unit_positions: List[Unit] = Field(..., description="List of all units and their positions in this frame.")
-    combat_log: List[CombatEvent] = Field(default_factory=list, description="List of specific tactical events occurring in this frame.")
-    validation_errors: List[str] = Field(default_factory=list, description="Logic/Physics violations detected in this frame.")
-
-class WargameScenario(BaseModel):
-    terrain_map: List[List[int]] = Field(..., description="N x N integer matrix representing terrain. 0: Open, 1: Water, 2: Urban, 3: Forest.")
-    frames: List[Frame] = Field(..., description="Sequential frames depicting the tactical movement.")
-
-class ScenarioExtension(BaseModel):
-    frames: List[Frame] = Field(..., description="Sequential frames continuing the tactical movement.")
+# Export models for backward compatibility or direct access via ai_handler
+Unit = models.Unit
+CombatEvent = models.CombatEvent
+Frame = models.Frame
+WargameScenario = models.WargameScenario
+ScenarioExtension = models.ScenarioExtension
 
 # --- Logic ---
 
@@ -264,3 +238,35 @@ def fetch_scenario(
                 raise RuntimeError(f"An unexpected error occurred during scenario generation: {str(e)}")
     
     return scenario
+
+def ask_commander(api_key: str, scenario: WargameScenario, frame_idx: int, question: str, model: str = "gpt-4o") -> str:
+    """
+    Answers a question about the scenario.
+    """
+    if not api_key:
+        return "Please provide an API Key to use the Commander's Assistant."
+        
+    client = openai.Client(api_key=api_key)
+    
+    frame = scenario.frames[frame_idx]
+    
+    prompt = f"""
+Current Tactical Situation (Frame {frame_idx + 1}):
+    - Description: {frame.frame_description}
+    - Units: {json.dumps([u.model_dump() for u in frame.unit_positions])}
+    - Events: {json.dumps([e.model_dump() for e in frame.combat_log])}
+    
+    Question: {question}
+    """
+    
+    try:
+        completion = client.chat.completions.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": "You are a tactical advisor. Answer the question based ONLY on the provided simulation state. Be concise and professional."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        return f"Error: {e}"

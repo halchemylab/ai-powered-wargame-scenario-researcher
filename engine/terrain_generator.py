@@ -1,7 +1,7 @@
 import overpy
 import numpy as np
 from geopy.geocoders import Nominatim
-from engine import config
+import config
 import time
 
 def get_coordinates(location_name):

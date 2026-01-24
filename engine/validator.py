@@ -1,8 +1,8 @@
 import math
-from engine import ai_handler
 import config
+from engine import models
 
-def validate_scenario(scenario: ai_handler.WargameScenario):
+def validate_scenario(scenario: models.WargameScenario):
     """
     Runs physics and logic checks on a scenario. 
     Populates the validation_errors field of each frame.
